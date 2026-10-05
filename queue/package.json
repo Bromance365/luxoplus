@@ -1,0 +1,19 @@
+{
+  "name": "luxoplus-file-attente",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "LUXOPLUS in-store queue: customer ticket, TV board, staff console.",
+  "scripts": {
+    "test": "node --test test/queue.test.mts",
+    "dev": "node scripts/dev-server.mjs",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.3"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0",
+    "qrcode-generator": "^1.4.4"
+  }
+}
