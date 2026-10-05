@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#020610">
+<meta name="robots" content="noindex, nofollow">
+<title>LUX·O·PLUS — Salle d'attente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="brand.css">
+<style>
+  html, body { height: 100%; overflow: hidden; cursor: none; }
+  body { font-size: clamp(14px, 1.45vw, 26px); }
+  .tv { position: relative; z-index: 1; height: 100vh; height: 100dvh; display: grid; gap: clamp(10px, 1.5vw, 28px);
+        grid-template-columns: 1.45fr 1fr; grid-template-rows: auto 1fr auto; padding: clamp(14px, 2vw, 40px); }
+  .tv-head { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .tv-head .emblem { width: clamp(40px, 4.2vw, 84px); height: clamp(40px, 4.2vw, 84px); }
+  .tv-head .wordmark { font-size: clamp(22px, 2.6vw, 52px); }
+  .tv-head .tagline { font-size: clamp(8px, .8vw, 15px); }
+  .head-right { display: flex; align-items: center; gap: clamp(10px, 1.6vw, 30px); }
+  .clock { font-family: var(--serif); font-style: italic; font-size: clamp(26px, 3.4vw, 68px); color: var(--ivory); letter-spacing: -.01em; }
+  .tv .status-pill { font-size: clamp(9px, .9vw, 17px); padding: .6em 1.1em; }
+  .panel { padding: clamp(14px, 2vw, 40px); min-height: 0; display: flex; flex-direction: column; }
+  .panel > h2 { font-family: var(--mono); font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--blue-glow);
+                font-size: clamp(11px, 1.15vw, 22px); margin-bottom: clamp(10px, 1.6vw, 28px); display: flex; justify-content: space-between; gap: 12px; }
+  .panel > h2 small { color: var(--mute); letter-spacing: .18em; }
+
+  /* Baies */
+  .bays { flex: 1; min-height: 0; display: grid; gap: clamp(10px, 1.4vw, 26px); grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 20vw, 380px), 1fr)); align-content: stretch; }
+  .bay { position: relative; border-radius: var(--r-md); border: 1px solid var(--hairline-strong); background: rgba(2,6,16,.55);
+         padding: clamp(12px, 1.6vw, 30px); display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+  .bay .bay-label { font-family: var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--mute); font-size: clamp(10px, 1vw, 19px); }
+  .bay .num { font-weight: 800; letter-spacing: -.05em; line-height: .9; font-size: clamp(64px, 11vw, 230px);
+              background: linear-gradient(100deg, #b8ddff, #fff 30%, #4a9eff 70%, #1e88e5); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .bay .who { font-size: clamp(16px, 2vw, 40px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bay .meta { font-family: var(--mono); font-size: clamp(10px, 1vw, 19px); color: var(--chrome); letter-spacing: .08em; }
+  .bay .bar { height: clamp(5px, .6vw, 10px); border-radius: 99px; background: var(--hairline-strong); overflow: hidden; margin-top: clamp(6px, .8vw, 14px); }
+  .bay .bar i { display: block; height: 100%; background: linear-gradient(90deg, #1e88e5, #4a9eff); border-radius: inherit; transition: width 1s linear; }
+  .bay.free .num { font-size: clamp(34px, 4.4vw, 90px); -webkit-text-fill-color: var(--mute); background: none; font-weight: 600; letter-spacing: -.02em; }
+  .bay.free { border-style: dashed; }
+  .bay.fresh { border-color: var(--blue-glow); box-shadow: 0 0 0 1px var(--blue-glow), 0 0 60px rgba(74,158,255,.35); animation: arrive 1.6s ease-in-out infinite; }
+  @keyframes arrive { 50% { box-shadow: 0 0 0 1px var(--blue-glow), 0 0 110px rgba(74,158,255,.65); } }
+
+  /* Prochains */
+  .next { list-style: none; display: grid; gap: clamp(6px, .9vw, 16px); flex: 1; align-content: start; }
+  .next li { display: grid; grid-template-columns: clamp(70px, 8vw, 150px) 1fr auto; align-items: center; gap: clamp(8px, 1.2vw, 24px);
+             border: 1px solid var(--hairline); background: rgba(255,255,255,.025); border-radius: var(--r-md); padding: clamp(8px, 1vw, 20px) clamp(12px, 1.5vw, 28px); }
+  .next li:first-child { border-color: var(--blue-glow); background: rgba(74,158,255,.08); }
+  .next .n { font-weight: 800; font-size: clamp(26px, 3.8vw, 76px); letter-spacing: -.04em; line-height: 1; }
+  .next .sv { font-size: clamp(14px, 1.7vw, 32px); font-weight: 600; }
+  .next .at { font-family: var(--mono); font-size: clamp(12px, 1.5vw, 28px); color: var(--blue-pale); white-space: nowrap; }
+  .next .at small { display: block; color: var(--mute); font-size: .62em; letter-spacing: .12em; text-align: right; }
+  .empty { margin: auto; text-align: center; color: var(--chrome); font-family: var(--serif); font-style: italic; font-size: clamp(18px, 2.4vw, 46px); line-height: 1.3; }
+  .empty small { display: block; font-family: var(--sans); font-style: normal; color: var(--mute); font-size: .6em; margin-top: .4em; }
+  .more { font-family: var(--mono); color: var(--mute); letter-spacing: .14em; font-size: clamp(10px, 1.1vw, 20px); margin-top: 8px; }
+
+  /* Pied */
+  .foot { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: clamp(14px, 2vw, 40px); padding: clamp(12px, 1.6vw, 30px) clamp(16px, 2.2vw, 44px); }
+  .wait-big { font-weight: 800; letter-spacing: -.04em; line-height: 1; font-size: clamp(30px, 5vw, 100px); }
+  .wait-big em { font-style: italic; background: linear-gradient(100deg, #b8ddff, #4a9eff 45%, #1e88e5); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; padding-right: .06em; }
+  .join { display: flex; align-items: center; gap: clamp(12px, 1.8vw, 36px); text-align: right; }
+  .join p { font-size: clamp(13px, 1.5vw, 28px); font-weight: 700; max-width: 14em; line-height: 1.25; }
+  .join p small { display: block; color: var(--mute); font-weight: 500; font-size: .78em; }
+  .qr { background: #fff; padding: clamp(6px, .9vw, 16px); border-radius: var(--r-sm); line-height: 0; flex: none; }
+  .qr svg { width: clamp(84px, 11vw, 220px); height: auto; display: block; }
+  .closed { grid-column: 1 / -1; text-align: center; color: #ffe7b0; background: rgba(255,201,77,.08); border: 1px solid rgba(255,201,77,.3); border-radius: var(--r-md);
+            padding: .7em 1em; font-weight: 700; font-size: clamp(14px, 1.8vw, 34px); }
+  .offline { position: fixed; z-index: 30; left: 50%; top: 10px; transform: translateX(-50%); }
+
+  .sound { position: fixed; z-index: 40; inset: 0; display: grid; place-items: center; background: rgba(2,6,16,.82); backdrop-filter: blur(8px); cursor: pointer; }
+  .sound button { font-size: clamp(16px, 2vw, 34px); padding: .9em 1.6em; cursor: pointer; }
+  .sound-hint { position: fixed; right: 14px; bottom: 12px; z-index: 5; font-family: var(--mono); font-size: 11px; letter-spacing: .16em; color: var(--mute); opacity: .7; }
+
+  @media (max-width: 860px), (max-aspect-ratio: 1/1) {
+    html, body { overflow: auto; height: auto; cursor: auto; }
+    .tv { height: auto; grid-template-columns: 1fr; }
+    .bays { grid-template-columns: repeat(2, 1fr); }
+    .foot { grid-template-columns: 1fr; }
+    .join { justify-content: space-between; text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) { .bay.fresh { animation: none; } .bay .bar i { transition: none; } }
+</style>
+</head>
+<body>
+<div class="bubbles" aria-hidden="true">
+  <span style="width:46px;height:46px;left:6%;top:22%;animation-delay:0s;"></span>
+  <span style="width:30px;height:30px;left:93%;top:14%;animation-delay:-5s;"></span>
+  <span style="width:64px;height:64px;left:48%;top:92%;animation-delay:-9s;"></span>
+  <span style="width:20px;height:20px;left:26%;top:70%;animation-delay:-3s;"></span>
+</div>
+
+<div class="tv">
+  <header class="tv-head">
+    <div class="logo" aria-label="LUX·O·PLUS">
+      <span id="emblem"></span>
+      <span><span class="wordmark">LUX<span class="dot"></span>O<span class="dot"></span>PLUS</span>
+        <span class="tagline">Lave-auto · Car wash</span></span>
+    </div>
+    <div class="head-right">
+      <span class="status-pill"><span class="live-dot off" id="live-dot"></span><span id="live-txt">Direct · Live</span></span>
+      <div class="clock" id="clock" aria-label="Heure / Time">--:--</div>
+    </div>
+  </header>
+
+  <section class="panel glass" aria-labelledby="h-serving">
+    <h2 id="h-serving"><span>En service</span><small>Now serving</small></h2>
+    <div class="bays" id="bays" aria-live="polite"></div>
+  </section>
+
+  <section class="panel glass" aria-labelledby="h-next">
+    <h2 id="h-next"><span>Prochains</span><small>Up next</small></h2>
+    <ol class="next" id="next" aria-live="polite"></ol>
+    <div class="more" id="more" hidden></div>
+  </section>
+
+  <div class="closed" id="closed" role="status" hidden></div>
+
+  <footer class="foot glass">
+    <div>
+      <div class="label">Attente pour un nouvel arrivant · Wait for a new arrival</div>
+      <div class="wait-big" id="wait">—</div>
+    </div>
+    <div class="join" id="join" hidden>
+      <p>Scannez pour prendre votre place<small>Scan to join the line</small></p>
+      <div class="qr" id="qr"></div>
+    </div>
+  </footer>
+</div>
+
+<div class="msg msg-error offline" id="offline" role="alert" hidden>Connexion perdue — nouvelle tentative… · Connection lost, retrying…</div>
+
+<div class="sound" id="sound" role="dialog" aria-label="Activer le son">
+  <button class="btn btn-primary" id="btn-sound" type="button">Activer le son · Enable sound</button>
+</div>
+<div class="sound-hint" id="sound-hint" hidden>🔊</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="demo-backend.js"></script>
+<script src="qr.js"></script>
+<script>
+const C = window.APP_CONFIG;
+const sb = supabase.createClient(C.supabaseUrl, C.supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } });
+const $ = (id) => document.getElementById(id);
+const POLL_MS = 5000;
+const TZ = 'America/Toronto';        // heure de Montréal
+$('emblem').innerHTML = window.luxEmblem();     // SVG statique de la marque (config.js)
+
+// ---------- Utilitaires d'affichage (le texte vient de la base : toujours textContent) ----------
+function h(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+const svcName = (code) => ((C.services[code] || {}).name || code).replace(/\.$/, '');
+const clock = () => { $('clock').textContent = new Intl.DateTimeFormat('fr-CA', { hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date()); };
+setInterval(clock, 10000); clock();
+const dur = (m) => window.fmtDuration(m);
+// Heure d'un début estimé : arrondie aux 5 minutes, comme la page client
+const at = (waitMin) => window.fmtClock(waitMin, 'fr');
+
+// ---------- Son : chime + annonce vocale à chaque nouveau numéro en service ----------
+let audio = null, soundOn = false;
+function chime() {
+  if (!audio) return;
+  const t0 = audio.currentTime;
+  [523, 659, 784, 1047].forEach((f, i) => {
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = 'sine'; o.frequency.value = f; o.connect(g); g.connect(audio.destination);
+    g.gain.setValueAtTime(0.0001, t0 + i * 0.16);
+    g.gain.exponentialRampToValueAtTime(0.3, t0 + i * 0.16 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.16 + 0.8);
+    o.start(t0 + i * 0.16); o.stop(t0 + i * 0.16 + 0.85);
+  });
+}
+function say(text, lang) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = 0.92; speechSynthesis.speak(u);
+  } catch {}
+}
+function announce(x) {
+  if (!soundOn) return;
+  chime();
+  setTimeout(() => {
+    try { speechSynthesis.cancel(); } catch {}
+    say(`Numéro ${x.num}${x.first_name ? ', ' + x.first_name : ''}, baie ${x.bay}.`, 'fr-CA');
+    say(`Number ${x.num}${x.first_name ? ', ' + x.first_name : ''}, bay ${x.bay}.`, 'en-CA');
+  }, 900);
+}
+$('btn-sound').addEventListener('click', () => {
+  try { audio = new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); soundOn = true; chime(); } catch {}
+  $('sound').hidden = true; $('sound-hint').hidden = !soundOn;
+});
+try { navigator.wakeLock?.request('screen').catch(() => {}); } catch {}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) try { navigator.wakeLock?.request('screen').catch(() => {}); } catch {} });
+
+// ---------- QR vers la page client ----------
+(function () {
+  const url = new URL('./', location.href).href;
+  const q = qrcode(0, 'M'); q.addData(url); q.make();
+  const tpl = document.createElement('template');
+  tpl.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });      // SVG produit localement par qr.js
+  const svg = tpl.content.firstElementChild; svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'QR · ' + url);
+  $('qr').appendChild(svg);
+})();
+
+// ---------- Rendu ----------
+let seen = null;                    // numéros déjà vus en service (pour détecter les nouveaux)
+const fresh = new Map();            // num -> expiration du halo (ms)
+function render(b) {
+  // Baies : une tuile par baie, libre ou occupée
+  const bays = $('bays'); bays.replaceChildren();
+  const byBay = new Map(b.serving.map((x) => [x.bay, x]));
+  const now = Date.now();
+  for (let i = 1; i <= b.bays; i++) {
+    const x = byBay.get(i);
+    const el = h('div', 'bay' + (x ? '' : ' free') + (x && (fresh.get(x.num) || 0) > now ? ' fresh' : ''));
+    el.appendChild(h('div', 'bay-label', `Baie ${i} · Bay ${i}`));
+    if (x) {
+      el.appendChild(h('div', 'num', String(x.num)));
+      const foot = h('div');
+      foot.appendChild(h('div', 'who', x.first_name || ' '));
+      const total = x.total_minutes;
+      foot.appendChild(h('div', 'meta', `${svcName(x.service_code)} · ${x.minutes_left > 0 ? `~${dur(x.minutes_left)}` : 'bientôt · soon'}`));
+      if (total) { const bar = h('div', 'bar'), fill = h('i'); fill.style.width = Math.max(4, Math.min(100, 100 - (x.minutes_left / total) * 100)) + '%'; bar.appendChild(fill); foot.appendChild(bar); }
+      el.appendChild(foot);
+    } else {
+      el.appendChild(h('div', 'num', 'Libre · Free'));
+      el.appendChild(h('div', 'meta', ' '));
+    }
+    bays.appendChild(el);
+  }
+
+  // Prochains
+  const next = $('next'); next.replaceChildren();
+  if (!b.next.length) {
+    const li = h('li', 'empty'); li.style.display = 'block'; li.style.border = '0'; li.style.background = 'none';
+    li.appendChild(document.createTextNode('Aucune attente'));
+    li.appendChild(h('small', null, 'No wait — drive right in'));
+    next.appendChild(li);
+  }
+  for (const x of b.next) {
+    const li = h('li');
+    li.appendChild(h('div', 'n', String(x.num)));
+    li.appendChild(h('div', 'sv', svcName(x.service_code)));
+    const when = h('div', 'at', x.wait_minutes <= 2 ? 'Bientôt' : at(x.wait_minutes));
+    when.appendChild(h('small', null, x.wait_minutes <= 2 ? 'Soon' : 'début estimé · est. start'));
+    li.appendChild(when);
+    next.appendChild(li);
+  }
+  const extra = b.waiting_count - b.next.length;
+  $('more').hidden = extra <= 0; if (extra > 0) $('more').textContent = `+ ${extra} en attente · waiting`;
+
+  // Attente pour un nouvel arrivant
+  const w = $('wait'); w.replaceChildren();
+  if (b.wait_minutes <= 0) { const em = h('em', null, 'Aucune attente'); w.appendChild(em); }
+  else { w.appendChild(document.createTextNode('≈ ')); w.appendChild(h('em', null, dur(b.wait_minutes))); }
+
+  // Fermé / pause
+  const closed = !b.is_open || !b.accepting;
+  $('closed').hidden = !closed;
+  if (closed) $('closed').textContent = 'Les inscriptions sont fermées pour le moment · Sign-ups are closed for now';
+  $('join').hidden = closed;
+}
+
+function detectNew(b) {
+  const nums = new Set(b.serving.map((x) => x.num));
+  if (seen) for (const x of b.serving) if (!seen.has(x.num)) { fresh.set(x.num, Date.now() + 25000); announce(x); }
+  seen = nums;                       // le premier chargement ne déclenche aucune annonce
+}
+
+let live = false;
+async function refresh() {
+  const { data, error } = await sb.rpc('get_board');
+  if (error || !data) {
+    live = false; $('offline').hidden = false; $('live-dot').classList.add('off'); return;
+  }
+  $('offline').hidden = true; $('live-dot').classList.remove('off'); live = true;
+  detectNew(data); render(data);
+}
+refresh();
+setInterval(refresh, POLL_MS);
+</script>
+</body>
+</html>

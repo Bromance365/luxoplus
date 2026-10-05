@@ -1,28 +1,29 @@
-# QA report — queue/ (luxoplus-file-attente v2)
+# QA report — file d'attente Luxoplus + écran TV
 
-Tested revision: working tree on branch `claude/kind-lamport-4aw5m0` · Environment: Node 22.22, Chromium (Playwright), in-memory store via `scripts/dev-server.mjs`. **Not tested on the deployed URL.**
+Tested revision: working tree on branch `claude/kind-lamport-4aw5m0` · Environment: Node 22, PGlite (Postgres 17 en WebAssembly), Chromium via Playwright, faux Supabase local (`dev/mock-supabase.mjs`) et mode démo. **Pas testé sur l'URL déployée ni sur un vrai projet Supabase.**
+
+Scope of this round: ajout de `tv.html` (écran de salle d'attente), de la fonction SQL publique `get_board()` (+ `supabase/update-tv-board.sql`), de `get_board` dans le mode démo, du lien dans `admin.html`, des tests. Le reste de l'application (client, admin, schéma existant) n'a pas été modifié.
 
 | # | Check | Result | Evidence / reason |
 |---|---|---|---|
-| 1 | Unit + API tests (`npm test`) | PASS | 17/17: ETA maths, state machine, full/paused, config validation, Montreal day roll, daily join key, token never leaked, owner-only leave, forged/expired/wrong-role sessions, login rate limit, fail-closed without secrets, cross-origin + non-JSON refused, 8 concurrent joins, daily purge |
-| 2 | Browser journey (`npm run e2e`) | PASS | 16/16: staff login (bad + good PIN), TV login + QR, customer without key blocked, join, sanitised name, persistence on reload, call → TV + phone update within one poll, start, done, thank-you, EN toggle, anonymous staff call = 401, no horizontal scroll at 390 px |
-| 3 | Console errors/warnings | PASS | none, apart from the deliberate 401 negative tests |
-| 4 | Dependencies | PASS | `npm audit`: 0 vulnerabilities (a dev-only type package with 7 advisories was removed) |
-| 5 | Secrets | PASS | none in code; `STAFF_PIN` / `SESSION_SECRET` are Netlify env vars; missing → 503 |
-| 6 | XSS | PASS | DOM built with `textContent`; names filtered server-side; CSP `script-src 'self'` |
-| 7 | Real Netlify Blobs store | BLOCKED | no Netlify runtime in this sandbox; conditional writes tested on a memory store only. First deploy must be smoke-tested |
-| 8 | Deployed URL, headers, HTTPS | BLOCKED | not deployed (needs owner approval) |
-| 9 | iOS/Android notifications and vibration | BLOCKED | no devices. Web Notification works only while the page is open; iOS needs the page open or added to the home screen. No push server by design (no personal data) |
-| 10 | TV on the real screen (distance, speech voice fr-CA) | BLOCKED | needs the shop display |
-| 11 | Accessibility | PARTIAL | roles, labels, `aria-live`, focus rings, reduced motion, 44 px targets. No axe/Lighthouse run → BLOCKED for a formal score |
-| 12 | Comparison with the existing `luxoplus-file-attente.netlify.app` | BLOCKED | the site is unreachable from this environment and its code was not provided; this is a new build, not an edit |
-| 13 | Privacy (Law 25) | OPEN | minimal data and one-day retention implemented; notice at the counter, privacy contact and Netlify hosting location still to confirm by LUXOPLUS (see README) |
+| 1 | Tests du schéma SQL (`cd dev && npm test`) | PASS | Suite existante intacte + 7 nouveaux tests `get_board` |
+| 2 | `get_board` : aucune donnée personnelle | PASS | Test : aucun téléphone, véhicule, nom de famille, prix ni jeton dans la réponse ; `queue` reste illisible pour anon |
+| 3 | Écran TV dans Chromium, base SQL réelle (`npm run e2e`) | PASS | 13/13 : baies 1 et 2, prénoms seulement, prochains, QR, pas de scroll à 1920×1080, halo sur nouveau numéro, bandeau fermé + QR masqué |
+| 4 | Écran TV en mode démo | PASS | Affiche les lavages en cours |
+| 5 | Portrait 390 px | PASS | Pas de défilement horizontal (la page est conçue pour une TV) |
+| 6 | Console | PASS | Aucune erreur (polices Google et CDN interceptés dans l'environnement de test) |
+| 7 | XSS | PASS | Texte venant de la base inséré uniquement par `textContent` ; seul `innerHTML` : emblème statique de la marque et SVG QR généré localement |
+| 8 | Son et annonce vocale | PARTIAL | Code exécuté (clic « Activer le son », carillon) ; voix fr-CA/en-CA et volume non vérifiés sans écran ni haut-parleur → BLOCKED sur matériel réel |
+| 9 | Projet Supabase réel (RLS, grant `get_board`) | BLOCKED | Pas d'accès ; testé sur PGlite avec rôles anon/authenticated et révocation/octroi identiques à `schema.sql` |
+| 10 | URL déployée, en-têtes, HTTPS | BLOCKED | Non déployé : le réseau de l'environnement refuse `*.netlify.app` |
+| 11 | Accessibilité | PARTIAL | `aria-live`, rôles, `prefers-reduced-motion`, contraste hérité de `brand.css`. Aucun audit axe/Lighthouse |
+| 12 | Vie privée (Loi 25) | OPEN | Écran public = prénoms visibles : à mentionner dans l'avis au comptoir ; responsable et hébergement à confirmer par LUXOPLUS |
 
 ## Findings
 | ID | Severity | Finding | Status |
 |---|---|---|---|
-| Q-1 | Low | The daily QR code is a deterrent only: anyone who photographs it can join remotely until midnight. Mitigations: per-IP limit (4 / 10 min), 40-ticket cap, staff remove/close | Open (documented) |
-| Q-2 | Low | Rate limits are best-effort (non-atomic counters) | Open |
-| Q-3 | Info | CSP keeps `style-src 'unsafe-inline'` for dynamic style attributes; scripts remain strict | Open |
+| T-1 | Low | `get_board` est lisible par tout visiteur anonyme (par conception, comme `get_queue_status`) ; il expose numéros, prénoms et baies. Un tiers peut donc voir qui est en service | Open (documenté) |
+| T-2 | Low | La page TV charge supabase-js et les polices depuis des CDN externes (comme les autres pages) ; pas de CSP stricte à cause des scripts en ligne existants | Open |
+| T-3 | Info | `ip_hash` utilise `md5` (existant, hors périmètre) | Open |
 
-## Verdict: **BLOCKED** — code and local tests are green; READY needs items 7–10 and 13 on the deployed URL.
+## Verdict: **BLOCKED** — le code et les tests locaux passent ; READY exige le déploiement, un projet Supabase réel, un test sur la vraie TV (items 8–10) et la confirmation des points Loi 25 (item 12).

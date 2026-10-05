@@ -1,31 +1,22 @@
+# Seuls les fichiers de l'app sont publiés (pas dev/ ni supabase/).
 [build]
-  publish = "public"
-
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-
-# One page serves the three screens; the script reads the path.
-[[redirects]]
-  from = "/tv"
-  to = "/index.html"
-  status = 200
-[[redirects]]
-  from = "/staff"
-  to = "/index.html"
-  status = 200
+  command = "rm -rf dist && mkdir dist && cp index.html admin.html tv.html brand.css config.js demo-backend.js qr.js dist/"
+  publish = "dist"
 
 [[headers]]
   for = "/*"
   [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
     X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
-    Referrer-Policy = "no-referrer"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    Content-Security-Policy = "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
-    Cache-Control = "no-cache"
+
 [[headers]]
-  for = "/api/*"
+  for = "/*.js"
   [headers.values]
-    Cache-Control = "no-store"
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "no-cache"

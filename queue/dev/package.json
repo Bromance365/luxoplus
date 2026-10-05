@@ -1,0 +1,17 @@
+{
+  "name": "file-attente-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test-schema.mjs",
+    "mock": "node mock-supabase.mjs",
+    "e2e": "node e2e-tv.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.8"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "playwright-core": "^1.63.0"
+  }
+}

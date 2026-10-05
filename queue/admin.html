@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#020610">
+<title>LUX·O·PLUS — Tableau de bord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="brand.css">
+<style>
+  /* Connexion */
+  .login { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; }
+  .login .logo { margin-bottom: 26px; }
+  .login-card { width: 100%; max-width: 360px; padding: 28px 24px; }
+  .login-card h1 { font-size: 32px; margin: 10px 0 6px; }
+  .login-card p { margin-bottom: 22px; font-size: 14.5px; }
+  .login-error { margin-top: 12px; min-height: 18px; text-align: center; color: var(--danger); font-size: 13px; }
+
+  /* Tableau de bord */
+  .wrap { max-width: 980px; margin: 0 auto; padding: 16px 16px 40px; }
+  .head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .head-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .open-btn { cursor: pointer; }
+  .open-btn .live-dot.closed { background: var(--danger); box-shadow: 0 0 8px var(--danger); animation: none; }
+
+  .notif { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  .notif-text { flex: 1; }
+  .notif-close { background: none; border: none; color: inherit; font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+  .stat { padding: 14px 14px 12px; border-radius: var(--r-md); }
+  .stat-val { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; margin-top: 6px; white-space: nowrap; }
+  .stat-val.glow { color: var(--blue-glow); font-style: italic; text-shadow: 0 0 18px rgba(74,158,255,0.4); }
+  .stat-val.ok { color: var(--ok); }
+
+  .section-head { display: flex; align-items: center; gap: 10px; margin: 22px 0 12px; }
+  .section-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .section-head .tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .stepper { display: inline-flex; align-items: center; border: 1px solid var(--hairline-strong); border-radius: 100px; overflow: hidden; }
+  .stepper button { background: none; border: none; width: 32px; height: 30px; cursor: pointer; font-size: 16px; color: var(--chrome); }
+  .stepper button:hover { background: rgba(255,255,255,0.06); }
+  .stepper span { font-family: var(--mono); font-size: 12px; padding: 0 4px; min-width: 70px; text-align: center; }
+
+  .bays { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .bay { padding: 16px; border-radius: var(--r-md); display: flex; flex-direction: column; gap: 10px; min-height: 168px; }
+  .bay.busy { border-color: rgba(74,158,255,0.45); background: linear-gradient(160deg, rgba(21,101,192,0.4), rgba(13,40,84,0.35)); }
+  .bay.over { border-color: rgba(255,201,77,0.5); }
+  .bay-top { display: flex; align-items: center; gap: 10px; }
+  .bay-num { font-size: 34px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1; }
+  .bay-name { font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bay-sub { font-size: 13px; color: var(--chrome); }
+  .bay-sub a { color: var(--blue-pale); }
+  .bay-bar { height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .bay-bar div { height: 100%; background: linear-gradient(90deg, #1565c0, #4a9eff); border-radius: 3px; }
+  .bay.over .bay-bar div { background: var(--warn); }
+  .bay-actions { display: flex; gap: 8px; margin-top: auto; }
+  .bay-actions .btn { padding: 11px 16px; font-size: 14px; }
+  .bay-free { align-items: center; justify-content: center; text-align: center; border-style: dashed; }
+  .bay-free .bay-num { color: var(--mute); }
+
+  .call-next { margin-top: 12px; padding: 18px; font-size: 17px; }
+
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--r-sm); }
+  .item.first { border-color: rgba(74,158,255,0.4); }
+  .item-num { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-style: italic; font-size: 16px; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+  .item.first .item-num { background: rgba(74,158,255,0.2); color: var(--blue-glow); }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-sub { font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+  .item-sub a { color: var(--blue-pale); }
+  .tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 100px; background: rgba(74,158,255,0.14); color: var(--blue-pale); white-space: nowrap; }
+  .tag.absolux { background: rgba(184,221,255,0.18); color: #fff; }
+  .item-side { text-align: right; flex-shrink: 0; }
+  .item-price { font-weight: 800; font-style: italic; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--hairline-strong); background: rgba(255,255,255,0.03); color: var(--mute); cursor: pointer; font-size: 18px; flex-shrink: 0; }
+  .icon-btn:hover { color: var(--danger); border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.08); }
+  .empty { text-align: center; padding: 26px; color: var(--mute); border-radius: var(--r-md); }
+
+  .history { border-radius: var(--r-md); overflow: hidden; }
+  .h-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--hairline); font-size: 13.5px; }
+  .h-row:last-child { border-bottom: none; }
+  .h-num { font-family: var(--mono); color: var(--mute); width: 34px; flex-shrink: 0; }
+  .h-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .h-what { color: var(--mute); font-size: 12.5px; white-space: nowrap; }
+  .h-ok { color: var(--ok); } .h-ko { color: var(--danger); }
+
+  .footer-actions { display: flex; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+  .footer-actions .btn { flex: 1; min-width: 200px; padding: 12px; font-size: 14px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(2,6,16,0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .dialog { max-width: 360px; width: 100%; padding: 26px 22px; text-align: center; background: var(--midnight); }
+  .dialog h2 { font-size: 22px; margin-bottom: 8px; }
+  .dialog p { font-size: 14px; color: var(--chrome); margin-bottom: 20px; }
+  .dialog .btn { width: 100%; margin-top: 8px; }
+
+  @media (max-width: 640px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .item-side .item-time { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="bubbles" aria-hidden="true">
+  <span style="width:40px;height:40px;left:4%;top:20%;"></span>
+  <span style="width:16px;height:16px;left:92%;top:12%;animation-delay:-5s;"></span>
+  <span style="width:52px;height:52px;left:90%;top:80%;animation-delay:-11s;"></span>
+</div>
+
+<!-- CONNEXION -->
+<div class="login page" id="login" hidden>
+  <div class="logo"><span class="emblem-slot"></span>
+    <span><span class="wordmark">LUX<span class="dot"></span>O<span class="dot"></span>PLUS</span><span class="tagline">Personnel · Garage</span></span>
+  </div>
+  <form class="login-card glass" id="login-form">
+    <div class="eyebrow">— Accès réservé —</div>
+    <h1 class="display">Tableau de <em>bord.</em></h1>
+    <p class="serif-note">Connectez-vous pour gérer la file d’attente.</p>
+    <div class="field"><label class="label" for="login-email">Courriel</label>
+      <input class="input" type="email" id="login-email" autocomplete="username" required></div>
+    <div class="field"><label class="label" for="login-pwd">Mot de passe</label>
+      <input class="input" type="password" id="login-pwd" autocomplete="current-password" required></div>
+    <button class="btn btn-primary btn-block" id="btn-login" type="submit">Entrer →</button>
+    <div class="login-error" id="login-error" role="alert"></div>
+  </form>
+</div>
+
+<!-- CONFIRMATION REMISE À ZÉRO -->
+<div class="overlay" id="reset-dialog" hidden>
+  <div class="dialog glass" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+    <h2 id="reset-title">Remettre la file à zéro ?</h2>
+    <p>Tous les clients d’aujourd’hui (en attente, en service et historique) seront effacés et les numéros recommenceront à 1.</p>
+    <button class="btn btn-danger" id="btn-reset-yes" type="button">Oui, remettre à zéro</button>
+    <button class="btn btn-ghost" id="btn-reset-no" type="button">Annuler</button>
+  </div>
+</div>
+
+<!-- TABLEAU DE BORD -->
+<div class="page wrap" id="dash" hidden>
+  <header class="head">
+    <div class="logo"><span class="emblem-slot"></span>
+      <span><span class="wordmark">LUX<span class="dot"></span>O<span class="dot"></span>PLUS</span><span class="tagline">Tableau de bord</span></span>
+    </div>
+    <div class="head-right">
+      <span class="status-pill" title="Connexion"><span class="live-dot off" id="live-dot"></span><span id="live-label">…</span></span>
+      <button class="status-pill open-btn" id="btn-open" type="button" title="Suspendre / rouvrir les inscriptions"></button>
+    </div>
+  </header>
+
+  <div class="notif msg msg-warn" id="notif" role="status" hidden>
+    <span class="notif-text" id="notif-text"></span>
+    <button class="notif-close" id="notif-close" type="button" aria-label="Fermer">×</button>
+  </div>
+
+  <section class="stats">
+    <div class="stat glass"><div class="label">En attente</div><div class="stat-val glow" id="s-waiting">0</div></div>
+    <div class="stat glass"><div class="label">En service</div><div class="stat-val" id="s-serving">0</div></div>
+    <div class="stat glass"><div class="label">Terminés</div><div class="stat-val ok" id="s-done">0</div></div>
+    <div class="stat glass"><div class="label">Revenus (avant taxes)</div><div class="stat-val" id="s-revenue">0 $</div></div>
+  </section>
+
+  <div class="section-head">
+    <h2>Baies</h2>
+    <div class="tools">
+      <div class="stepper" aria-label="Nombre de baies">
+        <button type="button" id="bay-minus" aria-label="Retirer une baie">−</button>
+        <span id="bay-count"></span>
+        <button type="button" id="bay-plus" aria-label="Ajouter une baie">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="bays" id="bays"></div>
+  <button class="btn btn-primary btn-block call-next" id="btn-next" type="button"></button>
+
+  <div class="section-head"><h2>File d’attente</h2><span class="label" id="wait-info" style="margin-left:auto;"></span></div>
+  <div class="list" id="waiting"></div>
+
+  <div class="section-head"><h2>Historique du jour</h2></div>
+  <div class="history glass" id="history"></div>
+
+  <div class="footer-actions">
+    <a class="btn btn-ghost" id="link-tv" href="tv.html" target="_blank" rel="noopener">📺 Écran de la salle d’attente</a>
+    <button class="btn btn-danger" id="btn-reset" type="button">↺ Remettre la file à zéro</button>
+    <button class="btn btn-ghost" id="btn-logout" type="button">Se déconnecter</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="demo-backend.js"></script>
+<script>
+const C = window.APP_CONFIG;
+const sb = supabase.createClient(C.supabaseUrl, C.supabaseKey);
+const $ = (id) => document.getElementById(id);
+document.querySelectorAll('.emblem-slot').forEach((el) => { el.outerHTML = luxEmblem(); });
+
+let data = null;
+let seenDepartures = null;
+let notifQueue = [];
+let channel = null;
+let pollTimer = null;
+let busy = false;
+
+const svcName = (code) => C.services[code]?.name || code;
+const sizeName = (code) => C.sizes[code]?.fr || code;
+const money = (n) => fmtPrice(n, 'fr');
+const telLink = (p) => p ? `<a href="tel:${esc(p.replace(/\D/g, ''))}">${esc(p)}</a>` : '';
+const minutesSince = (iso) => Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+
+// ---------- Son (débloqué au premier clic) ----------
+let audioCtx = null;
+document.addEventListener('pointerdown', () => {
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch {}
+});
+function playSound() {
+  if (!audioCtx || audioCtx.state !== 'running') return;
+  try {
+    const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(660, t + 0.15);
+    g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    o.start(t); o.stop(t + 0.4);
+  } catch {}
+}
+
+// ---------- Connexion ----------
+function showLogin(msg = '') {
+  stopLive();
+  $('dash').hidden = true;
+  $('login').hidden = false;
+  $('login-error').textContent = msg;
+}
+async function enterDashboard() {
+  if (!(await loadData(true))) return;
+  $('login').hidden = true;
+  $('dash').hidden = false;
+  startLive();
+}
+$('login-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = $('btn-login');
+  btn.disabled = true;
+  $('login-error').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('login-email').value.trim(), password: $('login-pwd').value });
+  $('login-pwd').value = '';
+  btn.disabled = false;
+  if (error) {
+    $('login-error').textContent = error.status === 400 ? 'Courriel ou mot de passe incorrect.' : 'Erreur de connexion. Réessayez.';
+    return;
+  }
+  enterDashboard();
+});
+$('btn-logout').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  seenDepartures = null;
+  showLogin();
+});
+
+// ---------- Données ----------
+async function loadData(initial = false) {
+  const { data: d, error } = await sb.rpc('get_admin_dashboard');
+  if (error) {
+    if ((error.message || '').includes('ACCES_REFUSE')) {
+      await sb.auth.signOut();
+      showLogin('Ce compte n’a pas accès au tableau de bord.');
+      return false;
+    }
+    if (error.code === 'PGRST301' || error.status === 401) { showLogin('Session expirée. Reconnectez-vous.'); return false; }
+    setLive(false);
+    if (initial) showLogin('Erreur de connexion. Réessayez.');
+    return false;
+  }
+  detectDepartures(d);
+  data = d;
+  render();
+  setLive(true);
+  return true;
+}
+
+function detectDepartures(d) {
+  const departures = d.history.filter((h) => h.status === 'cancelled' && h.cancelled_by === 'client');
+  if (seenDepartures === null) { seenDepartures = new Set(departures.map((h) => h.id)); return; }
+  for (const h of departures) {
+    if (seenDepartures.has(h.id)) continue;
+    seenDepartures.add(h.id);
+    pushNotif(`${h.name} (#${h.num}) a quitté la file d’attente` + (h.called_at ? ' — sa baie a été libérée.' : '.'));
+  }
+}
+
+function setLive(on) {
+  $('live-dot').className = 'live-dot' + (on ? '' : ' off');
+  $('live-label').textContent = on ? 'En direct' : 'Hors ligne';
+}
+
+// Temps réel (Supabase Realtime) + rafraîchissement de secours toutes les 15 s
+let debounce = null;
+const scheduleLoad = () => { clearTimeout(debounce); debounce = setTimeout(() => loadData(), 300); };
+function startLive() {
+  stopLive();
+  channel = sb.channel('queue-admin')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, scheduleLoad)
+    .subscribe();
+  pollTimer = setInterval(() => loadData(), 15000);
+}
+function stopLive() {
+  if (channel) { sb.removeChannel(channel); channel = null; }
+  clearInterval(pollTimer);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('dash').hidden) loadData(); });
+
+// ---------- Rendu ----------
+function render() {
+  const d = data;
+  $('s-waiting').textContent = d.waiting.length;
+  $('s-serving').textContent = `${d.serving.length} / ${d.bays}`;
+  $('s-done').textContent = d.done_count;
+  $('s-revenue').textContent = money(d.revenue);
+
+  $('btn-open').innerHTML = `<span class="live-dot ${d.is_open ? '' : 'closed'}"></span>` +
+    (!d.accepting ? 'Inscriptions suspendues · Rouvrir' : d.is_open ? 'Inscriptions ouvertes · Suspendre' : 'Hors des heures');
+  $('btn-open').disabled = busy || (d.accepting && !d.is_open);
+  $('bay-count').textContent = `${d.bays} baie${d.bays > 1 ? 's' : ''}`;
+
+  // Baies
+  const byBay = Object.fromEntries(d.serving.map((s) => [s.bay, s]));
+  const extra = d.serving.filter((s) => !s.bay || s.bay > d.bays);   // si on a réduit le nombre de baies
+  const cards = [];
+  for (let b = 1; b <= d.bays; b++) {
+    const s = byBay[b];
+    if (!s) {
+      cards.push(`<div class="bay bay-free glass"><span class="label">Baie ${b}</span><div class="bay-num">Libre</div></div>`);
+      continue;
+    }
+    cards.push(bayCard(s, b));
+  }
+  extra.forEach((s) => cards.push(bayCard(s, s.bay || '?')));
+  $('bays').innerHTML = cards.join('');
+
+  const next = d.waiting[0];
+  const freeBays = d.bays - d.serving.length;
+  $('btn-next').disabled = busy || !next || freeBays <= 0;
+  $('btn-next').textContent = !next ? 'Aucun client en attente'
+    : freeBays <= 0 ? 'Toutes les baies sont occupées'
+    : `⏭ Appeler le #${next.num} — ${svcName(next.service_code)}`;
+
+  // File d'attente
+  $('wait-info').textContent = d.waiting.length ? `Nouveau client : début dans ~${fmtDuration(d.wait_minutes)}` : '';
+  $('waiting').innerHTML = d.waiting.length === 0
+    ? '<div class="empty glass">Aucun client en attente</div>'
+    : d.waiting.map((c, i) => `
+      <div class="item glass ${i === 0 ? 'first' : ''}">
+        <div class="item-num">${c.num}</div>
+        <div class="item-info">
+          <div class="item-name">${esc(c.name)} <span class="tag ${c.service_code}">${esc(svcName(c.service_code))}</span></div>
+          <div class="item-sub">${esc(sizeName(c.vehicle_size))}${c.car ? ' · ' + esc(c.car) : ''}${c.color ? ' · ' + esc(c.color) : ''}${c.phone ? ' · ' + telLink(c.phone) : ''}</div>
+        </div>
+        <div class="item-side">
+          <div class="item-price">${money(c.price)}</div>
+          <div class="label item-time">${minutesSince(c.created_at)} min</div>
+        </div>
+        <button class="icon-btn" type="button" data-remove="${c.id}" data-label="${esc(c.name)} (#${c.num})" aria-label="Retirer ${esc(c.name)}">×</button>
+      </div>`).join('');
+
+  // Historique
+  const why = (h) => h.cancelled_by === 'client' ? 'Parti' : h.cancelled_by === 'staff' ? 'Retiré' : 'Expiré';
+  $('history').innerHTML = d.history.length === 0
+    ? '<div class="h-row" style="color:var(--mute);">Aucun client terminé aujourd’hui</div>'
+    : d.history.map((h) => `
+      <div class="h-row">
+        <span class="h-num">#${h.num}</span>
+        <span class="h-name">${esc(h.name)}</span>
+        <span class="h-what">${h.status === 'done' ? `${esc(svcName(h.service_code))} · ${money(h.price)}` : why(h)}</span>
+        ${h.status === 'done' ? '<span class="h-ok" title="Terminé">✓</span>' : '<span class="h-ko" title="Annulé">✕</span>'}
+      </div>`).join('');
+}
+
+function bayCard(s, b) {
+  const elapsed = minutesSince(s.called_at);
+  const over = elapsed > s.minutes;
+  const pct = Math.min(100, Math.round((elapsed / s.minutes) * 100));
+  return `
+    <div class="bay busy glass ${over ? 'over' : ''}">
+      <div class="bay-top">
+        <span class="label">Baie ${b}</span>
+        <span class="tag ${s.service_code}" style="margin-left:auto;">${esc(svcName(s.service_code))}</span>
+      </div>
+      <div class="bay-top">
+        <div class="bay-num">#${s.num}</div>
+        <div style="min-width:0;">
+          <div class="bay-name">${esc(s.name)}</div>
+          <div class="bay-sub">${esc(sizeName(s.vehicle_size))} · ${money(s.price)}${s.car ? ' · ' + esc(s.car) : ''}${s.color ? ' · ' + esc(s.color) : ''}</div>
+          ${s.phone ? `<div class="bay-sub">${telLink(s.phone)}</div>` : ''}
+        </div>
+      </div>
+      <div>
+        <div class="bay-bar"><div style="width:${pct}%"></div></div>
+        <div class="label" style="margin-top:6px;">${elapsed} / ${s.minutes} min${over ? ' · dépassé' : ''}</div>
+      </div>
+      <div class="bay-actions">
+        <button class="btn btn-primary" style="flex:1;" type="button" data-finish="${s.id}" ${busy ? 'disabled' : ''}>✓ Terminé</button>
+        <button class="icon-btn" type="button" data-remove="${s.id}" data-label="${esc(s.name)} (#${s.num})" aria-label="Annuler ${esc(s.name)}">×</button>
+      </div>
+    </div>`;
+}
+
+// ---------- Actions ----------
+async function action(fn, args) {
+  if (busy) return;
+  busy = true; render();
+  try {
+    const { error } = await sb.rpc(fn, args);
+    if (error) throw error;
+  } catch (e) {
+    console.error(e);
+    alert('L’action a échoué. Vérifiez votre connexion et réessayez.');
+  } finally {
+    busy = false;
+    await loadData();
+  }
+}
+
+$('btn-next').addEventListener('click', () => action('call_next'));
+$('btn-open').addEventListener('click', () => action('set_accepting', { p_on: !data.accepting }));
+$('bay-minus').addEventListener('click', () => { if (data.bays > 1) action('set_bays', { p_bays: data.bays - 1 }); });
+$('bay-plus').addEventListener('click', () => { if (data.bays < 20) action('set_bays', { p_bays: data.bays + 1 }); });
+
+document.addEventListener('click', (ev) => {
+  const fin = ev.target.closest('[data-finish]');
+  if (fin) return action('finish_client', { p_id: Number(fin.dataset.finish) });
+  const rm = ev.target.closest('[data-remove]');
+  if (rm && confirm(`Retirer ${rm.dataset.label} ?`)) action('remove_client', { p_id: Number(rm.dataset.remove) });
+});
+
+$('btn-reset').addEventListener('click', () => { $('reset-dialog').hidden = false; });
+$('btn-reset-no').addEventListener('click', () => { $('reset-dialog').hidden = true; });
+$('btn-reset-yes').addEventListener('click', async () => {
+  $('reset-dialog').hidden = true;
+  seenDepartures = null;
+  await action('reset_today');
+});
+
+// ---------- Bandeau des départs ----------
+function pushNotif(msg) {
+  notifQueue.push(msg);
+  playSound();
+  if ($('notif').hidden) nextNotif();
+}
+function nextNotif() {
+  const msg = notifQueue.shift();
+  $('notif').hidden = !msg;
+  if (msg) $('notif-text').textContent = msg;
+}
+$('notif-close').addEventListener('click', () => { $('notif').hidden = true; setTimeout(nextNotif, 300); });
+
+// ---------- Démarrage ----------
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) enterDashboard(); else showLogin();
+})();
+setInterval(() => { if (data && !$('dash').hidden && !busy) render(); }, 30000);  // minuteurs des baies
+</script>
+</body>
+</html>
