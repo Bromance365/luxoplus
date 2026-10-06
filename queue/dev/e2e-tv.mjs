@@ -35,7 +35,7 @@ const browser = await chromium.launch({ executablePath: exe, args: ['--no-sandbo
 const errors = [];
 const supaJs = readFileSync('node_modules/@supabase/supabase-js/dist/umd/supabase.js', 'utf8');
 async function open(port, vp, tag) {
-  const ctx = await browser.newContext({ viewport: vp, locale: 'fr-CA' });
+  const ctx = await browser.newContext({ viewport: vp, locale: 'fr-CA', timezoneId: 'Asia/Tokyo' });   // appareil mal réglé : l'écran doit rester à l'heure de Montréal
   const page = await ctx.newPage();
   page.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\.g/.test(m.text())) errors.push(`${tag}: ${m.text()}`); });
   page.on('pageerror', (e) => errors.push(`${tag} pageerror: ${e.message}`));
@@ -53,6 +53,10 @@ ok('TV : 2 baies occupées avec les numéros 1 et 2', (await tv.locator('.bay:no
 ok('TV : prénoms seulement (Jean, Marie)', /Jean/.test(text) && /Marie/.test(text) && !/Tremblay|Roy\b/.test(text));
 ok('TV : prochains 3 et 4 listés', (await tv.locator('.next .n').allTextContents()).join() === '3,4');
 ok('TV : aucun téléphone ni véhicule affiché', !/555-|Civic/.test(text));
+const shown = (await tv.locator('.next .at').first().textContent()).match(/(\d+) h (\d+)/);
+const mtl = new Intl.DateTimeFormat('fr-CA', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Toronto' }).format(new Date()).match(/(\d+) h (\d+)/);
+const diffMin = ((Number(shown[1]) * 60 + Number(shown[2])) - (Number(mtl[1]) * 60 + Number(mtl[2])) + 1440) % 1440;
+ok('TV : heures estimées à l\'heure de Montréal même si l\'appareil est mal réglé', diffMin >= 0 && diffMin <= 400, 'écart ' + diffMin + ' min');
 ok('TV : QR affiché', (await tv.locator('#qr svg').count()) === 1);
 ok('TV : pas de scroll à 1920×1080', await tv.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1));
 await tv.screenshot({ path: 'shots/tv-1920.png' });

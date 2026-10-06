@@ -154,8 +154,9 @@ const svcName = (code) => ((C.services[code] || {}).name || code).replace(/\.$/,
 const clock = () => { $('clock').textContent = new Intl.DateTimeFormat('fr-CA', { hour: 'numeric', minute: '2-digit', timeZone: TZ }).format(new Date()); };
 setInterval(clock, 10000); clock();
 const dur = (m) => window.fmtDuration(m);
-// Heure d'un début estimé : arrondie aux 5 minutes, comme la page client
-const at = (waitMin) => window.fmtClock(waitMin, 'fr');
+// Heure d'un début estimé, arrondie aux 5 minutes, toujours à l'heure de Montréal (même si la TV est mal réglée)
+const hm = new Intl.DateTimeFormat('fr-CA', { hour: 'numeric', minute: '2-digit', timeZone: TZ });
+const at = (waitMin) => hm.format(new Date(Math.round((Date.now() + waitMin * 60000) / 300000) * 300000));
 
 // ---------- Son : chime + annonce vocale à chaque nouveau numéro en service ----------
 let audio = null, soundOn = false;
