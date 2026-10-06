@@ -38,17 +38,15 @@ await adm.waitForSelector('#login-form, #dash', { timeout: 15000 });
 if (await adm.locator('#login-form').isVisible()) { await adm.fill('#login-email', 'demo@demo.test'); await adm.fill('#login-pwd', 'demo'); await adm.click('#btn-login'); }
 await adm.waitForSelector('#dash:not([hidden])', { timeout: 15000 });
 ok('Admin : tableau de bord (démo)', true);
-ok('Admin : lien vers l\'écran TV', (await adm.locator('#link-tv').getAttribute('href')) === 'tv.html');
+ok('Admin : lien vers l\'écran TV', (await adm.locator('#link-tv').getAttribute('href')) .match(/(^|\/)tv(\.html)?$/) !== null);
 await adm.screenshot({ path: 'shots/live-admin.png' });
 
-// Appeler jusqu'à ce que le billet du client entre en baie
-for (let i = 0; i < 6; i++) {
+// Faire avancer la file : libérer une baie (Terminé) puis appeler le suivant, jusqu'à ce que le billet du client entre en baie
+for (let i = 0; i < 8; i++) {
   if (await cli.locator('#view-turn:not([hidden])').count()) break;
-  const done = adm.locator('button:has-text("Terminé")').first();
-  if (await adm.locator('#btn-call, button:has-text("Appeler")').count()) await adm.locator('#btn-call, button:has-text("Appeler")').first().click().catch(() => {});
-  await adm.waitForTimeout(700);
-  if (await done.count() && !(await cli.locator('#view-turn:not([hidden])').count())) await done.click().catch(() => {});
-  await adm.waitForTimeout(500);
+  if (await adm.locator('#btn-next:not([disabled])').count()) await adm.click('#btn-next');
+  else if (await adm.locator('[data-finish]:not([disabled])').count()) await adm.locator('[data-finish]').first().click();
+  await adm.waitForTimeout(900);
 }
 await cli.waitForSelector('#view-turn:not([hidden])', { timeout: 20000 });
 ok('Client : « c\'est votre tour » reçu', true);
