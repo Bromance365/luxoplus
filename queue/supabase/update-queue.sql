@@ -1,6 +1,13 @@
 -- Upgrade an existing dedicated Luxoplus queue database. Apply atomically.
 -- Preserves records, prices, staff accounts and current settings.
 begin;
+create index if not exists queue_service_code on public.queue (service_code);
+alter table public.lookup_attempts add column if not exists id bigint generated always as identity;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conrelid='public.lookup_attempts'::regclass and contype='p') then
+    alter table public.lookup_attempts add primary key (id);
+  end if;
+end $$;
 create unique index if not exists queue_one_serving_per_bay on public.queue (service_day, bay) where status = 'serving';
 create unique index if not exists queue_one_active_per_phone on public.queue (service_day, phone) where status in ('waiting', 'serving');
 

@@ -4,13 +4,17 @@ Customer queue, bilingual staff dashboard and waiting-room TV display for Lave A
 The existing static HTML/Supabase design is preserved. Source is in `queue/`.
 
 Recovered from `Bromance365/luxoplus`, Claude branch `claude/kind-lamport-4aw5m0`, commit `15d84ef`.
-Development continues locally on `codex/luxoplus-production-review`.
+Reviewed release is saved on GitHub branch `codex/luxoplus-production-review`.
 
 ## Current status
 
-Implemented and locally tested. **Production launch is pending owner approval.**
-The existing public site remains the previous demo; no database project, staff invitation,
-remote Git branch or production deployment was created during this review.
+**Production deployed October 9, 2026; registrations paused for owner activation.**
+Live site: https://luxoplus-file-attente-v2.netlify.app.
+Dedicated Canadian Supabase project: `umicfoxlyfubcberbmrv`.
+Staff invitation sent to `vy@abundances.ai`; accept it and set a password, then use
+the staff dashboard's “Inscriptions suspendues · Rouvrir” button when ready.
+Database/API checks, mobile/TV transitions and scheduled retention were verified live.
+Owner password setup and physical TV sound remain to be checked by the owner.
 
 - [QA report](queue/QA_REPORT.md): verified results and remaining limits.
 - [Release approval](queue/RELEASE_APPROVAL.md): exact launch actions and owner decisions.

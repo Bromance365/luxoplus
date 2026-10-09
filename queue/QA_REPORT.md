@@ -1,15 +1,16 @@
 # Luxoplus QA — October 9, 2026
 
-**Verdict: ready for owner review; production launch pending.**
+**Verdict: production deployed and verified; registrations paused for owner activation.**
 
 Reviewed source: Claude Code session “Luxoplus queue website”, GitHub branch
-`claude/kind-lamport-4aw5m0` at `15d84ef`. Current changes are local on
+`claude/kind-lamport-4aw5m0` at `15d84ef`. Reviewed changes are saved on GitHub branch
 `codex/luxoplus-production-review`. The original empty Codex checkout was populated
 from that branch; the older LaCie marketing page was not used or modified.
 
-The public `luxoplus-file-attente-v2.netlify.app/config.js` was checked on October 9:
-`demo: true` and a placeholder Supabase URL remain. No production project, invitation,
-remote push or deployment was performed during this review.
+The site now runs with `APP_CONFIG.demo=false` and the dedicated Canadian Supabase
+project `umicfoxlyfubcberbmrv`. Netlify deployment: `6ac95a27200ed99bd39436e0`.
+Staff invitation to `vy@abundances.ai` was accepted by Supabase and the account was
+authorized in `public.admins`. No staff password was chosen or changed by this agent.
 
 ## Verified locally
 
@@ -46,15 +47,46 @@ The original Claude QA report is preserved as `dev/QA_REPORT_CLAUDE_2026-10-06.m
   by hash. TV rows fit the panel and simultaneous calls queue both bilingual announcements.
 - Added atomic bootstrap/upgrade SQL, production environment validation and root Netlify setup.
 
-## Limits and remaining launch work
+## Verified on hosted production
 
-- **Real Supabase is untested.** PGlite tests exercise actual SQL roles and RLS, but do
-  not establish hosted PostgREST, Realtime, SMTP, or real multi-connection behavior.
-  Run postflight checks, Supabase security advisors and a real multi-device test after setup.
-- **Retention job is prepared, not running.** Install `supabase/retention.sql` before
-  enabling production, and verify the first successful scheduled execution.
-- **Real email delivery is untested.** Staff recovery uses the real SDK with a local
-  auth adapter. Configure and test the approved production sender/recipient.
+- Public PostgREST board/status, registration, phone + ticket recovery and tracking pass.
+- Anonymous direct queue/admin reads and staff RPC calls are rejected. RLS is enabled
+  on all five tables; protected helpers are not anonymously executable.
+- Staff RPCs were exercised using the approved Auth UUID and authenticated database
+  role: dashboard access, call and completion pass. This does not replace a real
+  browser login with the owner's chosen password, which remains pending.
+- Separate Chromium contexts on the live site: 390px customer phone with Tokyo device
+  timezone, 1280×720 TV and signed-out staff page. Tracking token removal, QR, called
+  ticket and completion transitions pass. No uncaught browser errors were observed.
+- Production CSP, nosniff, pages and pinned SDK routes pass. SQL, dev files, environment
+  files and release documentation return 404. Netlify production environment variables
+  are saved, and the deployed runtime uses the dedicated project/public key.
+- Public Auth signup is disabled, the exact production `/admin.html` return URL is set,
+  minimum password length is 12 and leaked-password protection is enabled.
+- Daily retention job is active at 08:00 UTC. A temporary launch cron job successfully
+  executed the same purge function; the temporary job was then removed.
+- Performance advisors identified a missing service foreign-key index and lookup-log
+  primary key; both are fixed in hosted SQL and the checked-in bootstrap/upgrade files.
+  The 82 SQL checks pass again after these changes.
+- All launch test tickets were removed; the queue, bays and revenue start empty.
+  Registrations remain paused for the owner to activate after password setup.
+
+Security advisors flag the deliberately public SECURITY DEFINER RPCs, authenticated
+staff RPCs and four RLS tables with no direct-read policies. These are intentional:
+public RPCs validate inputs/return limited data; staff RPCs assert membership; tables
+are default-deny and direct privileges are revoked. Permission checks passed.
+See [RPC advisor guidance](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable)
+and [RLS policy guidance](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+Remaining performance notices are an unused index on the new database and the default
+fixed Auth connection allocation on the Micro instance; no scaling change is needed now.
+See [index guidance](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index)
+and [production configuration](https://supabase.com/docs/guides/deployment/going-into-prod).
+
+## Limits and remaining owner checks
+
+- **Owner login remains pending.** The invitation was accepted by Supabase; inbox
+  delivery and the owner's password setup have not been observed. Recovery email
+  delivery and authenticated browser Realtime remain to be checked after setup.
 - **TV audio is untested on hardware.** Browser tests exercise the chime and both
   voice calls; they do not prove speaker volume, available FR/EN voices or TV sleep behavior.
 - **Owner validation remains required.** Approve inherited rates/hours/bays and the

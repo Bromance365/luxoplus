@@ -74,9 +74,11 @@ create table if not exists public.queue (
 create unique index if not exists queue_one_serving_per_bay on public.queue (service_day, bay) where status = 'serving';
 create unique index if not exists queue_one_active_per_phone on public.queue (service_day, phone) where status in ('waiting', 'serving');
 create index if not exists queue_day_status_num on public.queue (service_day, status, num);
+create index if not exists queue_service_code on public.queue (service_code);
 
 -- Tentatives de « Retrouver ma place » (anti-devinette)
 create table if not exists public.lookup_attempts (
+  id      bigint generated always as identity primary key,
   ip_hash text        not null,
   at      timestamptz not null default now()
 );

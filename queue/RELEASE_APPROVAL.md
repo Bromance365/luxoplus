@@ -1,29 +1,49 @@
-# Luxoplus release approval — October 9, 2026
+# Luxoplus launch record — October 9, 2026
 
-**Code prepared and locally tested. Production remains pending.** No paid service was
-created, no real staff invitation was sent, and no deployment was made.
+**Production deployed; registrations paused for owner activation.**
 
-## Proposed launch
+The owner approved the organization and staff recipient, then explicitly approved
+US$10/month additional Micro compute plus usage overages before project creation.
 
-- Repository: `Bromance365/luxoplus`; local branch `codex/luxoplus-production-review`.
-- Dedicated Supabase project: `luxoplus-file-attente`, Canada Central (`ca-central-1`).
-- Available Supabase organization: **vy-eliteurbanit's projects**
-  (`vercel_icfg_7DEp2bsFLT7C61pAMFQXmmii`). Approved by the owner on October 9.
-  The dashboard quotes **US$10/month additional compute**, billed hourly, plus usage
-  overages. Cost approval is pending; the connector's cost endpoint is unavailable.
-- Approved staff recipient: **vy@abundances.ai**, per the owner's October 9 instruction.
-  The recipient chooses the password. Public business contact details stay as configured.
-- Proposed site: **luxoplus-file-attente-v2.netlify.app**, the previously deployed demo.
-  Access verified in the UREM team on October 9. It uses manual Netlify Drop uploads.
-  The original site/domain is a separate follow-up
-  if its account remains inaccessible; no new Netlify site or custom domain is assumed.
-- Database changes: dedicated queue schema, existing prices/settings, protected staff
-  account, daily anonymization after 30 days. Tables from other businesses are untouched.
-- Publishing: owner approved proceeding on October 9. No repository webhooks are
-  configured; the existing site uses uploads. Save the reviewed branch to GitHub,
-  then deploy the production artifact after database creation and verification.
+## Deployed setup
 
-## Existing business defaults to validate
+- Live site: https://luxoplus-file-attente-v2.netlify.app
+- Staff: https://luxoplus-file-attente-v2.netlify.app/admin.html
+- TV: https://luxoplus-file-attente-v2.netlify.app/tv.html
+- Staff invitation: **vy@abundances.ai**; authorized in `public.admins`.
+  The owner chooses the password using the invitation email. Public contact details
+  remain those of Luxoplus.
+- Supabase: `luxoplus-file-attente`, `umicfoxlyfubcberbmrv`, Canada Central.
+  Organization: **vy-eliteurbanit's projects** (`vercel_icfg_7DEp2bsFLT7C61pAMFQXmmii`).
+- Netlify: existing site `1a3e5fcc-e8e7-4408-bbd3-a0f2ea91f586`, UREM team.
+  Production deployment: `6ac95a27200ed99bd39436e0`.
+  The site uses manual uploads; no Git build or new domain was configured.
+- Repository: `Bromance365/luxoplus`, branch `codex/luxoplus-production-review`.
+- Auth: public signup disabled; exact `/admin.html` redirect and default return URL;
+  12-character minimum password and leaked-password protection.
+- Retention: active daily job `luxoplus-personal-data-retention` at 08:00 UTC,
+  anonymizing personal data older than 30 days. A temporary cron execution passed
+  and its temporary job was removed.
+- Netlify production variables saved: `LUX_DEMO=false`, dedicated Supabase URL and
+  public publishable key. The production artifact contains no server secret or SQL.
+- Dedicated database schema, indexes and protected staff access are installed.
+  Other businesses' databases are untouched. Launch test data was removed.
+
+## Owner activation
+
+1. Accept the invitation sent to **vy@abundances.ai** and choose a password.
+2. Sign in to the staff page. Confirm the inherited operating values below and privacy
+   notice before serving customers.
+3. On the physical TV, open `/tv.html`, enable sound, and check volume and FR/EN voices.
+4. When the garage is ready, click **Inscriptions suspendues · Rouvrir** in the staff
+   dashboard. Registrations currently remain paused; there are no active tickets.
+
+Inbox delivery, the owner's chosen-password login, authenticated browser Realtime,
+physical TV audio and real phones/Safari have not been observed. Hosted public API,
+mobile tracking, separate TV polling, staff database roles, call/completion, permissions,
+headers and scheduled cleanup pass. See `QA_REPORT.md` for evidence and advisor notes.
+
+## Inherited business settings
 
 | Package | Sedan CAD before tax | SUV CAD before tax | Truck CAD before tax | Duration |
 |---|---:|---:|---:|---:|
@@ -31,41 +51,20 @@ created, no real staff invitation was sent, and no deployment was made.
 | Signature+ | 74.99 | 84.99 | 94.99 | 120 min |
 | ABSOLUX | 234.99 | 254.99 | 279.99 | 300 min |
 
-Hours: Monday–Saturday, 08:00–18:00 Montreal time. Two bays. Completion grace:
-30 min after closing. These are inherited configuration values, not newly verified
-business promises. The owner should approve or correct them before public use.
+Monday–Saturday, 08:00–18:00 Montreal time. Two bays. Completion grace: 30 minutes
+after closing. These values come from the recovered project and still require the
+operator's business validation before use.
 
-## Verification after approval
+No automatic SMS is sent. Browser alerts require the tracking page to remain open.
+SMS would require a separate provider, consent workflow and cost approval.
 
-1. Quote the cost for the selected organization and obtain the connector's required
-   cost confirmation before creating a project. Check whether a Luxoplus project
-   already exists before retrying any ambiguous creation result.
-2. Apply the schema, disable public signup, configure exact Auth redirect URLs,
-   invite the approved staff recipient and add their UUID to `public.admins`.
-3. Install the retention job; run postflight checks and Supabase security advisors.
-4. Deploy with public environment keys and `LUX_DEMO=false`; verify actual CSP,
-   asset routes and rejection of internal SQL/dev files.
-5. Complete registration on one phone, recover on another, call from staff, confirm
-   customer and TV transitions, finish service, and verify history and rates.
-6. Verify invitation/reset email delivery and the actual TV speaker volume/FR+EN voices.
-7. Confirm owner acceptance of privacy notice and operating settings. Mark the release
-   production-ready only after these items pass.
+## Rollback
 
-The new release sends no automatic SMS. Browser alerts require the tracking page to
-remain open. SMS integration is outside this release and would require a separate
-provider, consent workflow and cost approval.
+Previous demo deployment: `6ac5202a7f18a8ad0af75280` (October 6, 12:22 PM).
+It is suitable as a rollback only while no real customer tickets exist.
 
-## Rollback and failed launch
-
-Before publishing, retain the previous Netlify deploy ID and record the approved
-settings/price values. Bootstrap and upgrade SQL run in transactions: an error aborts
-the changes rather than leaving a partially installed public API.
-
-Current rollback deployment: `6ac5202a7f18a8ad0af75280` (October 6, 2026, 12:22 PM).
-This is the previous demo; it is only a suitable rollback while no real tickets exist.
-
-If production verification fails, pause real registrations and preserve all tickets.
-Restore a production-compatible artifact or show a maintenance page; do not silently
-route active customers to a browser-only demo. Database rollback uses reviewed corrective
-SQL and preserved records, never dropping the project or deleting service history.
-Check that the restored build matches the database RPC contract before reopening.
+If production fails after customers join, pause registrations and preserve all tickets.
+Restore a production-compatible artifact or show maintenance; never send active
+customers to the browser-only demo. Use corrective SQL and preserved records rather
+than dropping the database or deleting service history. Bootstrap and upgrade SQL are
+transactional. Check the restored frontend's RPC contract before reopening.

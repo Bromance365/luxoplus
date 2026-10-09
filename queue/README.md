@@ -6,9 +6,15 @@ reste géré par theluxoplus.com.
 
 ## État
 
-Version préparée et testée localement le 9 octobre 2026. Le site existant
-`https://luxoplus-file-attente-v2.netlify.app` reste l’ancienne démo. La production n’est
-pas branchée : aucun projet Supabase Luxoplus n’existe dans le compte connecté.
+Version publiée et vérifiée le 9 octobre 2026 sur
+`https://luxoplus-file-attente-v2.netlify.app`, avec Supabase dédié au Canada
+(`umicfoxlyfubcberbmrv`). Les inscriptions publiques Auth sont désactivées
+pour les clients; un compte personnel autorisé a reçu son invitation à `vy@abundances.ai`.
+Les inscriptions à la file sont suspendues pour l’activation par le propriétaire.
+Accepter l’invitation, choisir un mot de passe, puis cliquer sur
+« Inscriptions suspendues · Rouvrir » dans `/admin.html` lorsque le garage est prêt.
+Le parcours client/TV et la purge planifiée ont été vérifiés sur la production.
+La connexion avec le mot de passe choisi et le son du téléviseur physique restent à vérifier.
 Le site original `luxoplus-file-attente.netlify.app` dépend d’un autre compte Netlify
 selon le contexte Claude Code du 6 octobre; cet accès n’a pas été revérifié ici.
 
@@ -25,6 +31,7 @@ selon le contexte Claude Code du 6 octobre; cet accès n’a pas été revérifi
 | `vendor/supabase.js` | SDK Supabase 2.117.2 local, licence MIT jointe |
 | `supabase/schema.sql` | Installation atomique sur un projet Luxoplus neuf |
 | `supabase/update-queue.sql` | Mise à jour atomique d’une installation existante, sans effacement |
+| `supabase/update-performance.sql` | Index de clé étrangère et clé primaire du journal de recherches |
 | `supabase/retention.sql` | Purge quotidienne des renseignements personnels après 30 jours |
 | `supabase/postflight.sql` | Vérifications après installation |
 | `dev/` | Tests et adaptateur local; jamais publiés |
