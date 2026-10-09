@@ -1,24 +1,27 @@
 # Luxoplus release approval — October 9, 2026
 
 **Code prepared and locally tested. Production remains pending.** No paid service was
-created, no real staff invitation was sent, and no remote push or deployment was made.
+created, no real staff invitation was sent, and no deployment was made.
 
 ## Proposed launch
 
 - Repository: `Bromance365/luxoplus`; local branch `codex/luxoplus-production-review`.
 - Dedicated Supabase project: `luxoplus-file-attente`, Canada Central (`ca-central-1`).
 - Available Supabase organization: **vy-eliteurbanit's projects**
-  (`vercel_icfg_7DEp2bsFLT7C61pAMFQXmmii`). The owner must select this organization
-  before the connector can quote its actual recurring project cost.
-- Proposed staff recipient: **luxoplusmtl@gmail.com**, from the existing business config.
-  Invitation email requires explicit owner approval. The recipient chooses the password.
+  (`vercel_icfg_7DEp2bsFLT7C61pAMFQXmmii`). Approved by the owner on October 9.
+  The dashboard quotes **US$10/month additional compute**, billed hourly, plus usage
+  overages. Cost approval is pending; the connector's cost endpoint is unavailable.
+- Approved staff recipient: **vy@abundances.ai**, per the owner's October 9 instruction.
+  The recipient chooses the password. Public business contact details stay as configured.
 - Proposed site: **luxoplus-file-attente-v2.netlify.app**, the previously deployed demo.
-  Verify access before changing it. The original site/domain is a separate follow-up
+  Access verified in the UREM team on October 9. It uses manual Netlify Drop uploads.
+  The original site/domain is a separate follow-up
   if its account remains inaccessible; no new Netlify site or custom domain is assumed.
 - Database changes: dedicated queue schema, existing prices/settings, protected staff
   account, daily anonymization after 30 days. Tables from other businesses are untouched.
-- Publishing: push the reviewed branch only after approval; confirm whether Netlify
-  builds it automatically before pushing. Deploy the approved production artifact.
+- Publishing: owner approved proceeding on October 9. No repository webhooks are
+  configured; the existing site uses uploads. Save the reviewed branch to GitHub,
+  then deploy the production artifact after database creation and verification.
 
 ## Existing business defaults to validate
 
@@ -57,6 +60,9 @@ provider, consent workflow and cost approval.
 Before publishing, retain the previous Netlify deploy ID and record the approved
 settings/price values. Bootstrap and upgrade SQL run in transactions: an error aborts
 the changes rather than leaving a partially installed public API.
+
+Current rollback deployment: `6ac5202a7f18a8ad0af75280` (October 6, 2026, 12:22 PM).
+This is the previous demo; it is only a suitable rollback while no real tickets exist.
 
 If production verification fails, pause real registrations and preserve all tickets.
 Restore a production-compatible artifact or show a maintenance page; do not silently
