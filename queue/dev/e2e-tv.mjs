@@ -1,9 +1,10 @@
 // Parcours réel de l'écran TV dans Chromium : vrai schéma SQL (faux Supabase) + mode démo.   npm run e2e
 import { chromium } from 'playwright-core';
+import { chromiumPath } from './browser.mjs';
 import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
 
-const exe = process.env.CHROMIUM || '/opt/pw-browsers/chromium';
+const exe = chromiumPath();
 const MOCK = 8766, DEMO = 8767;
 mkdirSync('shots', { recursive: true });
 const procs = [
@@ -50,7 +51,7 @@ const tv = await open(MOCK, { width: 1920, height: 1080 }, 'tv');
 await tv.waitForSelector('.bay:not(.free)', { timeout: 10000 });
 const text = await tv.evaluate(() => document.body.innerText);
 ok('TV : 2 baies occupées avec les numéros 1 et 2', (await tv.locator('.bay:not(.free) .num').allTextContents()).join() === '1,2');
-ok('TV : prénoms seulement (Jean, Marie)', /Jean/.test(text) && /Marie/.test(text) && !/Tremblay|Roy\b/.test(text));
+ok('TV : no customer names displayed', !/Jean|Marie|Tremblay|Roy\b/.test(text));
 ok('TV : prochains 3 et 4 listés', (await tv.locator('.next .n').allTextContents()).join() === '3,4');
 ok('TV : aucun téléphone ni véhicule affiché', !/555-|Civic/.test(text));
 const shown = (await tv.locator('.next .at').first().textContent()).match(/(\d+) h (\d+)/);
@@ -90,7 +91,7 @@ await demo.screenshot({ path: 'shots/tv-demo.png' });
 const board = await rpc('get_board');
 ok('API publique : get_board sans champ sensible', !/phone|price|car"|token|Tremblay|Roy/.test(JSON.stringify(board)));
 const direct = await fetch(`${base}/rest/v1/queue`, { headers: { apikey: 'x' } });
-ok('API publique : table queue inaccessible', !direct.ok);
+ok('API publique : table queue inaccessible', direct.status === 404);
 
 ok('Console : aucune erreur', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close(); stop();

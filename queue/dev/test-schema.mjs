@@ -90,16 +90,21 @@ ok((await ticket(a)).status === 'done', '#1 terminé');
 let r = await adm('select call_next()');
 ok(r.num === 3 && r.bay === 1, '#3 entre dans la baie 1 libérée');
 
+// --- Client in service cannot cancel; staff may release and reassign the bay
 // --- Client en service qui part → baie réattribuée automatiquement
-ok(await rpc1('anon', null, 'select leave_queue($1)', [b.token]) === true, '#2 (en service) quitte');
+ok(await rpc1('anon', null, 'select leave_queue($1)', [b.token]) === false, 'client cannot cancel an in-service ticket');
+await adm('select remove_client($1)', [await idOf(2)]);
 t = await ticket(d);
 ok(t.status === 'serving' && t.bay === 2, '#4 promu automatiquement en baie 2');
-ok(await rpc1('anon', null, 'select leave_queue($1)', [b.token]) === false, 'double départ ignoré');
+ok(await rpc1('anon', null, 'select leave_queue($1)', [b.token]) === false, 'repeated cancellation ignored');
+
+const departing = await join('Waiting Departure');
+ok(await rpc1('anon', null, 'select leave_queue($1)', [departing.token]) === true, 'waiting customer can leave');
 
 // --- Retrouver ma place (téléphone + numéro)
 const FIND = 'select find_ticket($1, $2)';
 ok(await rpc1('anon', null, FIND, ['(438) 555-0103', 3], '7.7.7.7') === c.token, 'retrouver ma place : bon téléphone + numéro → même billet');
-ok(await rpc1('anon', null, 'select find_ticket($1)', ['1 438 555 0103'], '7.7.7.7') === c.token, 'retrouver ma place : téléphone seul → même billet');
+ok(await rpc1('anon', null, 'select find_ticket($1)', ['1 438 555 0103'], '7.7.7.7') === null, 'phone alone cannot recover a ticket');
 ok(await rpc1('anon', null, FIND, ['438-555-0103', 4], '7.7.7.7') === null, 'mauvais numéro → introuvable (null)');
 ok(await rpc1('anon', null, FIND, ['438-555-0000', 3], '7.7.7.7') === null, 'mauvais téléphone → introuvable (null)');
 for (let i = 0; i < 6; i++) await rpc1('anon', null, FIND, ['438-555-0000', 3], '7.7.7.7');
@@ -167,7 +172,9 @@ ok(new Set(nums).size === 15, 'pas de doublon de numéros');
 // --- Remise à zéro
 await adm('select reset_today()');
 r = await join('Zoe Lee');
-ok(r.num === 1, 'après remise à zéro, numéro 1');
+ok(r.num > Math.max(...nums), 'clearing active tickets does not reuse numbers');
+ok((await ticket(a)).status === 'done', 'clearing the queue preserves completed services');
+ok((await adm('select get_admin_dashboard()')).revenue > 0, 'clearing the queue preserves revenue');
 
 // --- Jour suivant
 await db.exec(`reset role; update queue set service_day = service_day - 1`);
@@ -184,10 +191,10 @@ ok((await rpc1('anon', null, 'select get_ticket($1)', ['00000000-0000-0000-0000-
   const rows = await as('postgres', null, 'select name, car, phone, price from queue');
   const dump = JSON.stringify(board);
   ok(Array.isArray(board.serving) && Array.isArray(board.next) && board.bays === 2, 'get_board : forme attendue (serving, next, bays)');
-  ok(board.serving.every((x) => x.num && x.bay && 'first_name' in x && x.minutes_left >= 0 && x.total_minutes > 0), 'get_board : en service = numéro, baie, prénom, minutes restantes, durée');
+  ok(board.serving.every((x) => x.num && x.bay && x.first_name === '' && x.minutes_left >= 0 && x.total_minutes > 0), 'get_board : ticket number, bay and duration; names hidden');
   ok(board.next.length <= 8 && board.next.every((x, i, a) => i === 0 || a[i - 1].num < x.num), 'get_board : 8 prochains max, dans l\'ordre');
   ok(board.next.every((x) => x.wait_minutes >= 0), 'get_board : attente estimée par numéro');
-  const leaks = rows.flatMap((r) => [r.phone, r.car, ...String(r.name).split(' ').slice(1)]).filter((v) => v && dump.includes(v));
+  const leaks = rows.flatMap((r) => [r.phone, r.car, r.name]).filter((v) => v && dump.includes(v));
   ok(leaks.length === 0, 'get_board : aucun téléphone, véhicule ni nom de famille' + (leaks.length ? ' (fuite : ' + leaks[0] + ')' : ''));
   ok(!/price|phone|car\b|token/.test(dump), 'get_board : aucun champ prix / téléphone / véhicule / jeton');
   ok((await err('anon', null, 'select * from queue'))?.includes('permission denied'), 'get_board n\'ouvre pas la table queue');
@@ -196,6 +203,33 @@ ok((await rpc1('anon', null, 'select get_ticket($1)', ['00000000-0000-0000-0000-
 // --- Purge Loi 25
 await db.exec(`update queue set service_day = service_day - 40 where name='Zoe Lee'`);
 ok(await rpc1('postgres', null, 'select purge_personal_data(30)') === 1, 'purge des données de plus de 30 jours');
+
+// Regression: an occupied bay cannot be removed; yesterday's jobs do not consume capacity.
+const dayTicket = await join('Second Bay');
+await adm('select call_next()');
+ok((await err('authenticated', ADMIN, 'select set_bays(1)'))?.includes('BAIE_OCCUPEE'), 'occupied bay removal refused');
+ok((await err('authenticated', ADMIN, 'select set_bays(null)'))?.includes('BAIES_INVALIDE'), 'null bay count refused');
+await db.exec(`update queue set service_day=service_day-10 where status='serving'`);
+ok((await adm('select get_admin_dashboard()')).serving.length === 0, 'yesterday serving tickets excluded from dashboard');
+ok((await rpc1('anon', null, 'select get_queue_status()')).wait_minutes === 0, 'yesterday serving tickets do not add wait time');
+await adm('select call_next()');
+ok((await ticket(dayTicket)).status === 'cancelled', 'yesterday serving tickets expire before today is called');
+
+// Regression: all privileged helpers remain inaccessible to the public.
+for (const sql of ['select _promote_next()', 'select purge_personal_data(1)', 'select reset_today()']) {
+  ok((await err('anon', null, sql))?.includes('permission denied'), 'anonymous helper blocked: ' + sql);
+}
+ok((await err('postgres', null, 'select purge_personal_data(0)'))?.includes('RETENTION_INVALIDE'), 'invalid retention refused');
+// Verify rerunning the upgrade preserves privileges and records.
+const beforeUpgrade = (await db.query('select count(*)::int as n from queue')).rows[0].n;
+await db.exec(fs.readFileSync(new URL('../supabase/update-queue.sql', import.meta.url), 'utf8'));
+ok((await db.query('select count(*)::int as n from queue')).rows[0].n === beforeUpgrade, 'upgrade preserves all queue records');
+ok((await err('anon', null, 'select _promote_next()'))?.includes('permission denied'), 'upgrade keeps helper private');
+ok((await rpc1('anon', null, 'select get_board()')).serving.every((x) => x.first_name === ''), 'upgrade preserves public board privacy');
+
+const postflight = await db.exec(fs.readFileSync(new URL('../supabase/postflight.sql', import.meta.url), 'utf8'));
+ok(postflight[0].rows.length === 5 && postflight[0].rows.every((r) => r.rowsecurity), 'postflight confirms RLS on all five tables');
+ok(postflight[1].rows.every((r) => !r.anonymous_direct_read && !r.authenticated_direct_write), 'postflight confirms direct table access stays closed');
 
 console.log(fails ? `\n${fails} ÉCHEC(S)` : '\nTous les tests passent');
 process.exit(fails ? 1 : 0);

@@ -78,13 +78,19 @@ window.fmtDuration = (min, lang = 'fr') => {
   return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`;
 };
 
-// Heure de la journée dans X minutes : « 14 h 35 » / « 2:35 pm »
-window.fmtClock = (minFromNow, lang = 'fr') => {
-  const d = new Date(Date.now() + minFromNow * 60000);
-  const m = Math.round(d.getMinutes() / 5) * 5;          // arrondi aux 5 minutes : c'est une estimation
-  d.setMinutes(m, 0, 0);
-  const hh = d.getHours(), mm = String(d.getMinutes()).padStart(2, '0');
-  return lang === 'en' ? `${hh % 12 || 12}:${mm} ${hh >= 12 ? 'pm' : 'am'}` : `${hh} h ${mm}`;
+// All estimates use Montreal time, even on a travelling customer's device.
+window.businessTimeZone = 'America/Toronto';
+window.fmtTime = (date, lang = 'fr') => new Intl.DateTimeFormat(lang === 'en' ? 'en-CA' : 'fr-CA', {
+  hour: 'numeric', minute: '2-digit', timeZone: window.businessTimeZone,
+}).format(date);
+window.fmtClock = (minFromNow, lang = 'fr', baseTime = Date.now()) => window.fmtTime(
+  new Date(Math.round((baseTime + minFromNow * 60000) / 300000) * 300000), lang,
+);
+window.businessDate = () => {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: window.businessTimeZone,
+    year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+  const part = (name) => parts.find((p) => p.type === name).value;
+  return `${part('year')}-${part('month')}-${part('day')}`;
 };
 
 window.formatHours = (st, lang = 'fr') => {

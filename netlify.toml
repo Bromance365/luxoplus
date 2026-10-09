@@ -1,5 +1,6 @@
 # Only the public app is deployed. SQL, QA and developer files stay private.
 [build]
+  base = "queue"
   command = "node build.mjs"
   publish = "dist"
 

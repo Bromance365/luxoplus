@@ -1,122 +1,136 @@
-# LUX·O·PLUS — File d'attente du garage
+# LUX·O·PLUS — File d’attente
 
-File d'attente virtuelle pour le garage de Lave Auto Luxoplus (5300 Av. Van Horne).
-Le client choisit son forfait (Express, Signature+, ABSOLUX) et la taille de son véhicule,
-reçoit un numéro, et suit en direct son début estimé. Plusieurs baies travaillent en parallèle.
+Application HTML pour le garage du Lave Auto Luxoplus, 5300 Av. Van Horne, Montréal.
+Page client FR/EN, personnel FR/EN, écran TV bilingue. Le service mobile sur rendez-vous
+reste géré par theluxoplus.com.
 
-Le service mobile (le van) fonctionne sur rendez-vous via theluxoplus.com : il n'est pas géré ici.
+## État
 
-| Fichier | Rôle |
+Version préparée et testée localement le 9 octobre 2026. Le site existant
+`https://luxoplus-file-attente-v2.netlify.app` reste l’ancienne démo. La production n’est
+pas branchée : aucun projet Supabase Luxoplus n’existe dans le compte connecté.
+Le site original `luxoplus-file-attente.netlify.app` dépend d’un autre compte Netlify
+selon le contexte Claude Code du 6 octobre; cet accès n’a pas été revérifié ici.
+
+## Fichiers
+
+| Fichier | Usage |
 |---|---|
-| `index.html` | Page client bilingue FR/EN : forfait, inscription, billet en direct, « c'est votre tour — baie N » |
-| `tv.html` | **Écran de la salle d'attente** (TV) : numéros en service par baie, prochains, attente, QR, son + annonce vocale FR/EN |
-| `qr.js` | Générateur de code QR (qrcode-generator, MIT) pour `tv.html` |
-| `admin.html` | Tableau de bord du personnel : baies, file, revenus du jour (connexion Supabase Auth) |
-| `brand.css` | Charte visuelle reprise de theluxoplus.com |
-| `config.js` | Coordonnées, textes des forfaits (FR/EN), URL/clé Supabase |
-| `supabase/update-tv-board.sql` | Ajoute l'écran TV à une base Supabase **déjà installée** (une seule exécution) |
-| `supabase/schema.sql` | Tables, prix/durées des forfaits, sécurité (RLS) et toute la logique |
-| `dev/` | Outils de développement local (pas à déployer) |
+| `index.html` | Inscription, billet, récupération téléphone + numéro, lien de suivi |
+| `admin.html` | Connexion, invitation/récupération de mot de passe, gestion des baies et billets |
+| `tv.html` | Baies, prochains numéros, QR, carillon et annonces FR/EN |
+| `privacy.html` | Avis de confidentialité FR/EN, informations propres à la démo |
+| `config.js` | Coordonnées et textes FR/EN; configuration de la démo |
+| `build.mjs` | Publication par liste de fichiers autorisés et CSP avec empreintes des scripts |
+| `vendor/supabase.js` | SDK Supabase 2.117.2 local, licence MIT jointe |
+| `supabase/schema.sql` | Installation atomique sur un projet Luxoplus neuf |
+| `supabase/update-queue.sql` | Mise à jour atomique d’une installation existante, sans effacement |
+| `supabase/retention.sql` | Purge quotidienne des renseignements personnels après 30 jours |
+| `supabase/postflight.sql` | Vérifications après installation |
+| `dev/` | Tests et adaptateur local; jamais publiés |
 
-## Démo en ligne (sans Supabase)
+## Prévisualisation et tests
 
-**https://luxoplus-file-attente.netlify.app** — client : `/` · personnel : `/admin.html` (cliquer « Entrer »).
-
-Avec `demo: true` dans `config.js`, `demo-backend.js` remplace Supabase par un faux serveur dans le
-navigateur (mêmes règles que `schema.sql`), pré-rempli de clients fictifs. Les données restent dans le
-navigateur : client et personnel se synchronisent entre onglets d'un même appareil, pas entre appareils.
-Le bandeau « Démo » en bas permet de passer d'une vue à l'autre, d'ajouter un client fictif ou de tout remettre à zéro.
-
-**Pour passer en vrai :** suivre les étapes ci-dessous, puis mettre `demo: false` dans `config.js`.
-
-## Mise en place Supabase (une seule fois)
-
-1. Créer un projet Supabase (région Canada de préférence).
-2. **SQL Editor** → coller et exécuter `supabase/schema.sql`.
-3. **Authentication › Sign In / Providers** → désactiver « Allow new users to sign up ».
-4. **Authentication › Users › Add user** → créer le compte du personnel (courriel + mot de passe, « Auto confirm »).
-5. **SQL Editor** → donner l'accès au tableau de bord :
-   ```sql
-   insert into public.admins (user_id)
-   select id from auth.users where email = 'courriel@du-personnel.com';
-   ```
-6. Vérifier les réglages (valeurs par défaut : lun–sam, 8 h–18 h, 2 baies) :
-   ```sql
-   update public.settings set
-     open_days = '{1,2,3,4,5,6}',      -- 1 = lundi … 7 = dimanche
-     open_time = '08:00', close_time = '18:00',
-     bays = 2                          -- aussi modifiable depuis le tableau de bord
-   where id = 1;
-   ```
-7. (Optionnel, Loi 25) Activer l'extension **pg_cron** puis planifier la purge des renseignements personnels de plus de 30 jours (commande en bas de `schema.sql`).
-8. Dans `config.js`, remplacer `supabaseUrl` et `supabaseKey` (Project Settings › API › clé *publishable*).
-
-## Écran de la salle d'attente (`tv.html`)
-
-Ouvrir `https://…/tv.html` sur la télévision (navigateur plein écran, F11) : un clic sur « Activer le son » une seule fois
-(exigé par les navigateurs), puis l'écran se met à jour seul toutes les 5 s.
-
-- **En service** : une tuile par baie (numéro géant, prénom, forfait, temps restant, barre de progression). Un nouveau numéro
-  fait sonner un carillon, s'illumine 25 s et est annoncé en français puis en anglais (« Numéro 12, Marie, baie 1 »).
-- **Prochains** : 8 prochains numéros avec forfait et début estimé. **Attente pour un nouvel arrivant** en grand.
-- **QR** vers la page d'inscription ; remplacé par un bandeau quand la file est fermée ou en pause.
-- **Vie privée** : l'écran ne reçoit que le numéro, le **prénom**, la baie et le forfait. Jamais le nom de famille, le téléphone,
-  le véhicule ni le prix (fonction `get_board()`, testée). Un écran public affiche donc des prénoms : l'indiquer sur l'avis de confidentialité au comptoir.
-- Lien direct depuis le tableau de bord (`admin.html` → « Écran de la salle d'attente »).
-- **Base déjà installée ?** exécuter `supabase/update-tv-board.sql` dans le SQL Editor (nouvelles installations : déjà dans `schema.sql`).
-- Fonctionne aussi en démo (`demo: true`).
-
-## Modifier les forfaits
-
-Prix et durées (font foi pour le calcul des attentes et des revenus) :
-```sql
-update public.services set price_sedan = 32.99, price_suv = 42.99, price_truck = 52.99, minutes = 30
-where code = 'express';
--- Masquer un forfait : update public.services set active = false where code = 'absolux';
+```sh
+npm --prefix queue/dev ci
+npm --prefix queue/dev run verify  # SQL, build, TV, parcours client/personnel/TV
+node queue/build.mjs              # construit queue/dist en démo
+cd queue/dev
+node serve-built.mjs              # http://localhost:8769 (démo + CSP)
+npm run mock                     # http://localhost:8765 (vrai SQL local, faux Supabase)
 ```
-Les noms, slogans et listes « inclus » (FR/EN) sont dans `config.js` → `services`.
-Un nouveau forfait = une ligne dans `services` + une entrée du même `code` dans `config.js`.
+
+Node 22+ et Chromium requis. `CHROMIUM=/chemin/vers/chromium` permet d’utiliser un
+navigateur existant. L’adaptateur local utilise PGlite et le schéma SQL réel, sans
+contacter un projet Supabase. Compte **local uniquement** : `admin@test.local` / `test1234`.
+
+## Démo
+
+`demo: true` utilise des clients fictifs et le stockage du navigateur. Les onglets du
+même navigateur se synchronisent; les appareils différents ne se synchronisent pas.
+Le bandeau « Démo » est visible. Le bouton de remise à zéro de la **démo** réinitialise
+uniquement ses données fictives. Les données locales sont renouvelées à la nouvelle
+journée de Montréal lors de la prochaine ouverture de page.
+
+## Installation réelle après approbation
+
+1. Créer un projet Supabase **dédié Luxoplus**, région `ca-central-1`, après confirmation
+   de l’organisation et du coût. Ne pas utiliser la base d’une autre entreprise.
+2. Exécuter `supabase/schema.sql` (projet neuf). Pour une base Luxoplus existante,
+   exécuter `supabase/update-queue.sql` plutôt que réinstaller.
+3. Désactiver l’inscription publique dans Supabase Auth. Ajouter l’URL exacte
+   `https://luxoplus-file-attente-v2.netlify.app/admin.html` aux redirections autorisées
+   et configurer l’URL du site. Adapter ces valeurs si le domaine change.
+4. Inviter l’adresse du personnel approuvée, avec redirection vers `/admin.html`.
+   Le destinataire définit lui-même son mot de passe. Ne pas mettre un mot de passe
+   dans un fichier ou dans le chat. Vérifier la livraison des courriels Auth; configurer
+   un SMTP approuvé si les restrictions de livraison l’exigent.
+5. Ajouter le compte approuvé dans `public.admins`, avec son UUID `auth.users.id`.
+   Un utilisateur Auth sans cette entrée reste refusé.
+6. Confirmer les prix, durées et heures (voir `RELEASE_APPROVAL.md`), puis modifier
+   `public.services` ou `public.settings` si nécessaire.
+7. Installer `supabase/retention.sql`; vérifier que le job est actif et que la première
+   exécution réussit. La rétention de 30 jours annoncée exige ce job.
+8. Définir les variables Netlify ci-dessous et publier la nouvelle version.
+9. Exécuter `supabase/postflight.sql`, les conseillers de sécurité Supabase, puis un
+   parcours réel sur deux téléphones + personnel + TV. Ne pas annoncer READY avant
+   ce test et la validation du matériel TV.
+
+## Variables de déploiement
+
+| Variable Netlify | Valeur |
+|---|---|
+| `LUX_DEMO` | `false` pour la production, `true` pour une démo |
+| `LUX_SUPABASE_URL` | URL HTTPS du projet Luxoplus dédié |
+| `LUX_SUPABASE_PUBLISHABLE_KEY` | Clé publique commençant par `sb_publishable_` |
+
+Le build de production refuse une URL absente, une clé fictive ou une clé secrète.
+Les clés de service, mots de passe et jetons de gestion ne vont jamais dans le navigateur.
+Netlify peut construire depuis la racine du dépôt (`netlify.toml` configure `base=queue`)
+ou depuis le dossier `queue`. `dist` contient uniquement les pages, styles, scripts,
+licences et `_headers`; aucun SQL, test, rapport QA ou fichier d’environnement.
+Les scripts inline sont autorisés par leurs empreintes CSP, sans `unsafe-inline` pour JavaScript.
 
 ## Règles de fonctionnement
 
-- Numéros attribués par la base, de 1 à N chaque jour (heure de Montréal).
-- **Début estimé** : simulation baie par baie à partir de la durée de chaque forfait et du temps déjà écoulé dans les baies occupées.
-- Un forfait dont la fin prévue dépasse de plus de 30 min l'heure de fermeture (`settings.close_grace_minutes`) est marqué
-  « Trop tard aujourd'hui » et refusé, avec un message invitant à revenir au prochain jour d'ouverture, dès l'ouverture.
-  En démo, cette règle se montre avec le bouton « Fermeture » du bandeau.
-- « Appeler le suivant » fait entrer le prochain client dans la première baie libre ; « Terminé » libère la baie.
-- Si un client en service quitte la file, sa baie est réattribuée automatiquement.
+- Numéros uniques et croissants par journée de Montréal. Les estimations sont toujours
+  affichées à l’heure de Montréal, même si le téléphone est réglé dans un autre fuseau.
+- Prix et durées viennent de `public.services`; le prix choisi est enregistré avec le billet.
+- L’attente simule les baies en parallèle. Les anciens billets actifs sont exclus des
+  estimations et expirés lors de la prochaine inscription ou du prochain appel.
+- Un forfait est refusé si sa fin estimée dépasse la fermeture de plus que la tolérance
+  configurée (30 min par défaut). Ces estimations ne garantissent pas une heure de fin.
+- « Appeler le suivant » attribue la première baie libre. « Terminé » libère la baie;
+  le personnel appelle ensuite le prochain. Retirer un billet en service depuis le
+  personnel réattribue automatiquement la baie au prochain billet en attente.
+- Un client peut quitter un billet **en attente** seulement. Un service commencé est
+  géré par le personnel. Une baie occupée ne peut pas être retirée de la capacité.
+- « Vider les billets actifs » annule les billets en attente/en service du jour,
+  conserve les services terminés et les revenus, et ne réutilise pas les numéros.
+- Le tableau de bord additionne les prix des services terminés avant taxes; il ne
+  confirme pas l’encaissement et ne remplace pas un système de facturation TPS/TVQ.
 
-## Informations du client
+## Billets et notifications
 
-- Étapes : 01 véhicule (taille, marque et modèle, couleur facultative) → 02 forfait (prix selon la taille) → 03 coordonnées.
-- Obligatoires pour rejoindre la file : taille du véhicule, marque et modèle, forfait, nom, téléphone
-  (le téléphone sert au futur texto de rappel). Le bouton reste bloqué tant qu'il manque quelque chose.
-- Les prix sont affichés « + taxes » ; les taxes sont détaillées à la facturation.
-- Sur le billet, l'estimation (voitures devant, attente, heures) est mise à jour aux 5 minutes, au rechargement
-  ou avec « Actualiser ». « C'est votre tour » et les annulations restent instantanés.
+Le même navigateur restaure son billet. « Retrouver ma place » exige **téléphone +
+numéro de billet** (10 essais par 10 minutes et connexion); le téléphone seul est
+refusé. Le lien `/#t=UUID` rouvre le billet sur un autre appareil. Ce lien donne accès
+au billet : il doit rester privé. Il est retiré de l’adresse après son adoption.
 
-## Retrouver sa place
+Le billet et la TV sont interrogés toutes les 5 secondes; les estimations affichées
+sur le billet changent aux 5 minutes, à l’approche du tour ou avec « Actualiser ».
+Il n’y a **aucun SMS ni push en arrière-plan**. Garder la page ouverte pour suivre
+les alertes. Les notifications navigateur, lorsqu’elles sont disponibles, sont facultatives.
 
-1. **Même téléphone / navigateur** : le billet est mémorisé, la page le rouvre automatiquement.
-2. **« Retrouver ma place »** : téléphone (obligatoire) + numéro de billet (facultatif) → même billet, même position.
-   Un téléphone n'a qu'une place active par jour. Limité à 10 essais / 10 min par connexion.
-3. **Lien de suivi** (`index.html#t=…`) : bouton « Copier mon lien de suivi » sur le billet ; sera aussi mis dans le texto.
+## TV et confidentialité
 
-## Déploiement
+Ouvrir `/tv` ou `/tv.html` en plein écran; cliquer « Activer le son » une fois.
+Les nouveaux numéros sont annoncés en FR/EN. Le nombre de prochains billets affichés
+s’adapte à l’espace disponible; le reste est indiqué par « + N en attente ».
+Le volume et les voix doivent être vérifiés sur la vraie télévision.
 
-Projet Netlify : `luxoplus-file-attente`. `netlify.toml` ne publie que `index.html`, `admin.html`, `tv.html`, `brand.css`,
-`config.js`, `demo-backend.js` et `qr.js` (jamais `dev/` ni `supabase/`). Idéalement sur un sous-domaine, ex. `file.theluxoplus.com`,
-avec un code QR à l'entrée du garage pointant vers `index.html`.
-
-## Développement local
-
-```bash
-cd dev && npm install
-npm test        # tests du schéma SQL (Postgres en WebAssembly)
-npm run e2e     # écran TV dans un vrai Chromium (base SQL réelle + démo)
-npm run mock    # faux Supabase + site sur http://localhost:8765
-```
-
-Compte du personnel en local : `admin@test.local` / `test1234`.
-Le faux serveur ouvre les inscriptions 24 h/24 ; `REAL_HOURS=1 npm run mock` applique les vraies heures.
+La fonction publique `get_board()` ne divulgue aucun nom, téléphone, véhicule,
+prix ou jeton. Elle conserve `first_name: ''` pour compatibilité avec les anciens écrans.
+Les tables ont toutes RLS. Seul le personnel autorisé peut lire la file complète.
+L’avis `privacy.html` doit être validé par le propriétaire avant lancement; il ne
+constitue pas une attestation de conformité à la Loi 25.

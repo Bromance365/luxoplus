@@ -81,6 +81,7 @@ http.createServer(async (req, res) => {
       return send(res, 200, { access_token: fakeJwt(ADMIN.id), token_type: 'bearer', expires_in: 3600,
         expires_at: now + 3600, refresh_token: 'fake', user: { id: ADMIN.id, email, aud: 'authenticated', role: 'authenticated' } });
     }
+    if (url.pathname === '/auth/v1/recover') return send(res, 200, {});
     if (url.pathname === '/auth/v1/logout') return send(res, 204, '', 'text/plain');
     if (url.pathname.startsWith('/auth/v1/user')) {
       return send(res, 200, { id: ADMIN.id, email: ADMIN.email, aud: 'authenticated', role: 'authenticated' });

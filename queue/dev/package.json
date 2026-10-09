@@ -3,15 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node test-schema.mjs",
+    "test": "node test-schema.mjs && node test-build.mjs",
     "mock": "node mock-supabase.mjs",
-    "e2e": "node e2e-tv.mjs"
+    "e2e": "node e2e-tv.mjs",
+    "e2e:queue": "node e2e-queue.mjs",
+    "verify": "npm test && npm run e2e && npm run e2e:queue"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.5.8"
+    "@electric-sql/pglite": "0.5.8"
   },
   "devDependencies": {
-    "@supabase/supabase-js": "^2.117.2",
-    "playwright-core": "^1.63.0"
+    "@supabase/supabase-js": "2.117.2",
+    "playwright-core": "1.63.0"
   }
 }

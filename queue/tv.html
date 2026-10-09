@@ -43,8 +43,17 @@
   .bay.fresh { border-color: var(--blue-glow); box-shadow: 0 0 0 1px var(--blue-glow), 0 0 60px rgba(74,158,255,.35); animation: arrive 1.6s ease-in-out infinite; }
   @keyframes arrive { 50% { box-shadow: 0 0 0 1px var(--blue-glow), 0 0 110px rgba(74,158,255,.65); } }
 
+  .bays.dense { grid-template-columns: repeat(var(--bay-columns), minmax(0, 1fr)); gap: 8px; }
+  .bays.dense .bay { padding: 7px; gap: 4px; }
+  .bays.dense .bay .bay-label { font-size: 9px; letter-spacing: .08em; }
+  .bays.dense .bay .num { font-size: 32px; }
+  .bays.dense .bay.free .num { font-size: 20px; }
+  .bays.dense .bay .who { display: none; }
+  .bays.dense .bay .meta { font-size: 9px; letter-spacing: 0; }
+  .bays.dense .bay .bar { margin-top: 4px; height: 4px; }
+
   /* Prochains */
-  .next { list-style: none; display: grid; gap: clamp(6px, .9vw, 16px); flex: 1; align-content: start; }
+  .next { min-height: 0; overflow: hidden; list-style: none; display: grid; gap: clamp(6px, .9vw, 16px); flex: 1; align-content: start; }
   .next li { display: grid; grid-template-columns: clamp(70px, 8vw, 150px) 1fr auto; align-items: center; gap: clamp(8px, 1.2vw, 24px);
              border: 1px solid var(--hairline); background: rgba(255,255,255,.025); border-radius: var(--r-md); padding: clamp(8px, 1vw, 20px) clamp(12px, 1.5vw, 28px); }
   .next li:first-child { border-color: var(--blue-glow); background: rgba(74,158,255,.08); }
@@ -137,7 +146,7 @@
 <div class="sound-hint" id="sound-hint" hidden>🔊</div>
 
 <script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase.js"></script>
 <script src="demo-backend.js"></script>
 <script src="qr.js"></script>
 <script>
@@ -145,7 +154,7 @@ const C = window.APP_CONFIG;
 const sb = supabase.createClient(C.supabaseUrl, C.supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } });
 const $ = (id) => document.getElementById(id);
 const POLL_MS = 5000;
-const TZ = 'America/Toronto';        // heure de Montréal
+const TZ = window.businessTimeZone;        // heure de Montréal
 $('emblem').innerHTML = window.luxEmblem();     // SVG statique de la marque (config.js)
 
 // ---------- Utilitaires d'affichage (le texte vient de la base : toujours textContent) ----------
@@ -178,13 +187,15 @@ function say(text, lang) {
     const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = 0.92; speechSynthesis.speak(u);
   } catch {}
 }
-function announce(x) {
+function announce(tickets) {
   if (!soundOn) return;
   chime();
   setTimeout(() => {
     try { speechSynthesis.cancel(); } catch {}
-    say(`Numéro ${x.num}${x.first_name ? ', ' + x.first_name : ''}, baie ${x.bay}.`, 'fr-CA');
-    say(`Number ${x.num}${x.first_name ? ', ' + x.first_name : ''}, bay ${x.bay}.`, 'en-CA');
+    for (const x of tickets) {
+      say(`Numéro ${x.num}, baie ${x.bay}.`, 'fr-CA');
+      say(`Number ${x.num}, bay ${x.bay}.`, 'en-CA');
+    }
   }, 900);
 }
 $('btn-sound').addEventListener('click', () => {
@@ -210,6 +221,8 @@ const fresh = new Map();            // num -> expiration du halo (ms)
 function render(b) {
   // Baies : une tuile par baie, libre ou occupée
   const bays = $('bays'); bays.replaceChildren();
+  bays.classList.toggle('dense', b.bays > 4);
+  bays.style.setProperty('--bay-columns', Math.min(5, Math.ceil(Math.sqrt(b.bays * 1.4))));
   const byBay = new Map(b.serving.map((x) => [x.bay, x]));
   const now = Date.now();
   for (let i = 1; i <= b.bays; i++) {
@@ -236,10 +249,11 @@ function render(b) {
   if (!b.next.length) {
     const li = h('li', 'empty'); li.style.display = 'block'; li.style.border = '0'; li.style.background = 'none';
     li.appendChild(document.createTextNode('Aucune attente'));
-    li.appendChild(h('small', null, 'No wait — drive right in'));
+    li.appendChild(h('small', null, b.is_open ? 'No customers waiting' : 'Sign-ups are closed'));
     next.appendChild(li);
   }
-  for (const x of b.next) {
+  const visible = b.next;
+  for (const x of visible) {
     const li = h('li');
     li.appendChild(h('div', 'n', String(x.num)));
     li.appendChild(h('div', 'sv', svcName(x.service_code)));
@@ -248,12 +262,12 @@ function render(b) {
     li.appendChild(when);
     next.appendChild(li);
   }
-  const extra = b.waiting_count - b.next.length;
-  $('more').hidden = extra <= 0; if (extra > 0) $('more').textContent = `+ ${extra} en attente · waiting`;
+
 
   // Attente pour un nouvel arrivant
   const w = $('wait'); w.replaceChildren();
-  if (b.wait_minutes <= 0) { const em = h('em', null, 'Aucune attente'); w.appendChild(em); }
+  if (!b.is_open || !b.accepting) { w.appendChild(h('em', null, 'Fermé · Closed')); }
+  else if (b.wait_minutes <= 0) { const em = h('em', null, 'Aucune attente'); w.appendChild(em); }
   else { w.appendChild(document.createTextNode('≈ ')); w.appendChild(h('em', null, dur(b.wait_minutes))); }
 
   // Fermé / pause
@@ -261,25 +275,46 @@ function render(b) {
   $('closed').hidden = !closed;
   if (closed) $('closed').textContent = 'Les inscriptions sont fermées pour le moment · Sign-ups are closed for now';
   $('join').hidden = closed;
+  // Keep complete rows within the panel at every TV resolution; reserve the overflow line first.
+  $('more').hidden = b.waiting_count <= 1;
+  $('more').textContent = `+ ${b.waiting_count} en attente · waiting`;
+  if (innerWidth > 860 && innerWidth > innerHeight) {
+    while (next.children.length > 1 && next.lastElementChild.getBoundingClientRect().bottom > next.getBoundingClientRect().bottom) {
+      next.lastElementChild.remove();
+    }
+  }
+  const extra = b.waiting_count - (b.next.length ? next.children.length : 0);
+  $('more').hidden = extra <= 0;
+  if (extra > 0) $('more').textContent = `+ ${extra} en attente · waiting`;
 }
 
 function detectNew(b) {
   const nums = new Set(b.serving.map((x) => x.num));
-  if (seen) for (const x of b.serving) if (!seen.has(x.num)) { fresh.set(x.num, Date.now() + 25000); announce(x); }
+  const arrivals = seen ? b.serving.filter((x) => !seen.has(x.num)) : [];
+  for (const x of arrivals) fresh.set(x.num, Date.now() + 25000);
+  if (arrivals.length) announce(arrivals);
   seen = nums;                       // le premier chargement ne déclenche aucune annonce
 }
 
-let live = false;
+let live = false, loading = false;
 async function refresh() {
+  if (loading) return;
+  loading = true;
+  try {
   const { data, error } = await sb.rpc('get_board');
   if (error || !data) {
     live = false; $('offline').hidden = false; $('live-dot').classList.add('off'); return;
   }
   $('offline').hidden = true; $('live-dot').classList.remove('off'); live = true;
   detectNew(data); render(data);
+  } catch {
+    live = false; $('offline').hidden = false; $('live-dot').classList.add('off');
+  } finally { loading = false; }
 }
 refresh();
 setInterval(refresh, POLL_MS);
+window.addEventListener('online', refresh);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 </script>
 </body>
 </html>

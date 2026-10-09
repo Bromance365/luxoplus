@@ -23,7 +23,7 @@ begin
     'waiting_count', (select count(*) from queue where service_day = v_today and status = 'waiting'),
     'serving',       coalesce((select json_agg(x order by x.bay) from (
                         select q.num, q.bay, q.service_code, sv.minutes as total_minutes,
-                               left(split_part(btrim(q.name), ' ', 1), 20) as first_name,
+                               ''::text as first_name, -- Public screens identify tickets by number only.
                                greatest(0, ceil(sv.minutes - extract(epoch from now() - q.called_at) / 60))::int as minutes_left
                           from queue q join services sv on sv.code = q.service_code
                          where q.status = 'serving' and q.service_day = v_today) x), '[]'::json),

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#020610">
 <title>LUX·O·PLUS — File d'attente</title>
 <meta name="description" content="Prenez votre place dans la file du lave-auto Luxoplus et suivez votre tour en direct.">
@@ -206,7 +207,7 @@
         </div>
         <div class="field">
           <label class="label" for="f-find-num" data-i18n="findNum"></label>
-          <input class="input" id="f-find-num" inputmode="numeric" maxlength="4" placeholder="12" />
+          <input class="input" id="f-find-num" required inputmode="numeric" maxlength="4" placeholder="12" />
         </div>
         <button class="btn btn-primary btn-block" id="btn-find" type="submit" data-i18n="findBtn"></button>
         <div class="msg msg-error" id="find-error" role="alert" hidden style="margin-top:12px;"></div>
@@ -221,7 +222,7 @@
 
     <form id="register-form" novalidate>
       <div class="step"><span class="label">01</span><h2 data-i18n="stepVehicle"></h2></div>
-      <div class="sizes" id="sizes" role="radiogroup"></div>
+      <div class="sizes" id="sizes" role="radiogroup" aria-label="Vehicle size"></div>
       <div class="field">
         <label class="label" for="f-car" data-i18n="carLabel"></label>
         <input class="input" id="f-car" maxlength="80" autocomplete="off" required />
@@ -232,7 +233,7 @@
       </div>
 
       <div class="step"><span class="label">02</span><h2 data-i18n="stepPackage"></h2></div>
-      <div class="pkgs" id="pkgs" role="radiogroup"></div>
+      <div class="pkgs" id="pkgs" role="radiogroup" aria-label="Service package"></div>
       <div class="msg msg-warn" id="late-msg" role="status" hidden style="margin-top:12px;"></div>
 
       <div class="step"><span class="label">03</span><h2 data-i18n="stepYou"></h2></div>
@@ -265,9 +266,10 @@
         </div>
       </div>
 
-      <button class="btn btn-primary btn-block" id="btn-reg" type="submit"></button>
+      <button class="btn btn-primary btn-block" id="btn-reg" type="submit" disabled></button>
       <div class="msg msg-info missing" id="missing" hidden></div>
       <p class="serif-note pay-note" data-i18n="payNote"></p>
+      <p class="serif-note pay-note"><span data-i18n="privacyNote"></span> <a id="privacy-link" href="privacy.html" data-i18n="privacyLink"></a></p>
       <div class="msg msg-error" id="form-error" role="alert" hidden style="margin-top:12px;"></div>
     </form>
   </main>
@@ -345,7 +347,7 @@
 </div>
 
 <script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase.js"></script>
 <script src="demo-backend.js"></script>
 <script>
 const C = window.APP_CONFIG;
@@ -365,7 +367,7 @@ const T = {
     inService: 'En service', waiting: 'En attente', wait: 'Attente',
     offline: 'Connexion perdue — nouvelle tentative en cours…',
     heroTitle: 'Prenez votre <em>place.</em>',
-    heroSub: 'Inscrivez-vous, prenez un café — on vous avise quand c’est votre tour.',
+    heroSub: 'Inscrivez-vous, prenez un café — suivez votre tour sur cette page.',
     closedEyebrow: '— Fermé —',
     closedTitle: 'Revenez <em>bientôt.</em>',
     closedPaused: 'La file est temporairement fermée. Revenez un peu plus tard !',
@@ -379,28 +381,29 @@ const T = {
     tomorrow: 'demain', onDay: '{day}',
     days: ['', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'],
     nameLabel: 'Votre nom', namePh: 'Ex. : Jean Tremblay',
-    phoneLabel: 'Téléphone (pour le texto de rappel)',
+    phoneLabel: 'Téléphone (pour vous joindre au besoin)',
     popular: '★ PLUS POPULAIRE', tooLate: 'TROP TARD AUJOURD’HUI',
     total: 'Prix du forfait', duration: 'Durée du service', startsIn: 'Début estimé',
     plusTax: '+ taxes', carsAhead: 'Voitures devant vous', waitBefore: 'Attente avant le début', readyAt: 'Voiture prête vers',
     price: 'Prix', at: 'vers {h}', noWait: 'Aucune',
     youHave: 'Vous avez environ',
-    timeSub: '<strong>{cars}</strong> avant vous · début vers <strong>{start}</strong>.<br>Faites vos commissions — on vous avertit {alert} min avant votre tour.',
+    timeSub: '<strong>{cars}</strong> avant vous · début vers <strong>{start}</strong>.<br>Gardez cette page ouverte pour voir l’alerte {alert} min avant votre tour.',
     timeSubZero: 'Une baie se libère sous peu. Restez à proximité du garage.',
     priceTax: '{p} + taxes',
     recap: 'Votre résumé', rPackage: 'Forfait', rVehicle: 'Véhicule', rName: 'Nom', rPhone: 'Téléphone', from: 'dès',
     missing: 'Pour rejoindre la file, il manque : {list}.',
     mPackage: 'le forfait', mSize: 'la taille du véhicule', mCar: 'la marque et le modèle', mName: 'votre nom', mPhone: 'un téléphone valide (10 chiffres)',
-    findToggle: 'Déjà inscrit ? Retrouver ma place', findHelp: 'Entrez le téléphone utilisé à l’inscription. Le numéro de billet est facultatif.',
-    findPhone: 'Téléphone', findNum: 'Numéro de billet (facultatif)', findBtn: 'Retrouver ma place →', finding: 'Recherche…',
+    findToggle: 'Déjà inscrit ? Retrouver ma place', findHelp: 'Entrez le téléphone utilisé à l’inscription et votre numéro de billet. Sans ces informations, utilisez votre lien de suivi ou adressez-vous au comptoir.',
+    findPhone: 'Téléphone', findNum: 'Numéro de billet', findBtn: 'Retrouver ma place →', finding: 'Recherche…',
     found: 'Votre place a été retrouvée — rien n’a changé dans la file.',
     updatedAt: 'Estimation de {h} · mise à jour aux 5 min', refreshNow: 'Actualiser',
     saveTitle: 'Ne perdez pas votre place',
-    saveHelp: 'Gardez ce lien : il rouvre votre billet sur n’importe quel appareil. Vous pouvez aussi le retrouver avec votre numéro de téléphone.',
+    saveHelp: 'Gardez ce lien : il rouvre votre billet sur n’importe quel appareil. Vous pouvez aussi le retrouver avec votre téléphone et votre numéro de billet. Ne partagez ce lien qu’avec une personne de confiance.',
     shareBtn: 'Copier mon lien de suivi', copied: 'Lien copié ✓',
     now: 'Maintenant', next: 'Vous êtes le prochain !',
     join: 'Rejoindre la file →', joining: 'Inscription…',
-    payNote: 'Paiement après le service.',
+    payNote: 'Paiement après le service. Aucun texto automatique : gardez cette page ouverte.',
+    privacyNote: 'Vos coordonnées servent à gérer votre visite. L’écran public affiche uniquement les numéros de billet.', privacyLink: 'Confidentialité',
     notifAsk: 'Activez les notifications pour être alerté quand c’est votre tour.', notifBtn: 'Activer',
     yourNumber: 'Votre numéro', ahead: 'Devant vous', registered: 'Inscription', yourTurn: 'Votre tour',
     alertNext: 'Vous êtes le prochain — restez à proximité du comptoir.',
@@ -422,14 +425,15 @@ const T = {
     err: {
       FERME: 'Les inscriptions sont fermées pour le moment.',
       DEJA_INSCRIT: 'Ce numéro de téléphone a déjà une place dans la file aujourd’hui. Utilisez « Retrouver ma place ».',
-      TELEPHONE_REQUIS: 'Le téléphone est obligatoire pour recevoir le texto de rappel.',
+      TELEPHONE_REQUIS: 'Le téléphone est obligatoire pour vous joindre au besoin.',
       VEHICULE_REQUIS: 'Veuillez indiquer la marque et le modèle du véhicule.',
+      BILLET_REQUIS: 'Veuillez entrer un numéro de billet valide.',
       INTROUVABLE: 'Aucune place trouvée aujourd’hui avec ces informations. Vérifiez le numéro ou adressez-vous au comptoir.',
       TELEPHONE_INVALIDE: 'Numéro de téléphone invalide (10 chiffres).',
       NOM_INVALIDE: 'Veuillez entrer votre nom (2 caractères minimum).',
       CHAMP_TROP_LONG: 'Un des champs est trop long.',
       FILE_PLEINE: 'La file est complète pour le moment. Réessayez plus tard.',
-      TROP_DE_DEMANDES: 'Trop d’inscriptions depuis cette connexion. Réessayez plus tard.',
+      TROP_DE_DEMANDES: 'Trop de demandes depuis cette connexion. Réessayez dans 10 minutes.',
       TROP_TARD: 'Ce forfait ne peut plus être complété aujourd’hui avant la fermeture. Choisissez un forfait plus court ou revenez au prochain jour d’ouverture.',
       FORFAIT_INVALIDE: 'Veuillez choisir un forfait.', TAILLE_INVALIDE: 'Veuillez choisir la taille du véhicule.',
       default: 'Erreur de connexion. Vérifiez votre connexion internet et réessayez.',
@@ -440,7 +444,7 @@ const T = {
     inService: 'In service', waiting: 'Waiting', wait: 'Wait',
     offline: 'Connection lost — retrying…',
     heroTitle: 'Save your <em>spot.</em>',
-    heroSub: 'Sign up, grab a coffee — we’ll ping you when it’s your turn.',
+    heroSub: 'Sign up, grab a coffee — follow your turn on this page.',
     closedEyebrow: '— Closed —',
     closedTitle: 'Back <em>soon.</em>',
     closedPaused: 'The queue is temporarily closed. Please check back shortly!',
@@ -454,28 +458,29 @@ const T = {
     tomorrow: 'tomorrow', onDay: 'on {day}',
     days: ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     nameLabel: 'Your name', namePh: 'e.g. John Smith',
-    phoneLabel: 'Phone (for the reminder text)',
+    phoneLabel: 'Phone (to reach you if needed)',
     popular: '★ MOST POPULAR', tooLate: 'TOO LATE TODAY',
     total: 'Package price', duration: 'Service time', startsIn: 'Estimated start',
     plusTax: '+ tax', carsAhead: 'Cars ahead of you', waitBefore: 'Wait before start', readyAt: 'Car ready around',
     price: 'Price', at: 'around {h}', noWait: 'None',
     youHave: 'You have about',
-    timeSub: '<strong>{cars}</strong> ahead of you · starts around <strong>{start}</strong>.<br>Run your errands — we’ll alert you {alert} min before your turn.',
+    timeSub: '<strong>{cars}</strong> ahead of you · starts around <strong>{start}</strong>.<br>Keep this page open to see the alert {alert} min before your turn.',
     timeSubZero: 'A bay is opening up shortly. Please stay close to the shop.',
     priceTax: '{p} + tax',
     recap: 'Your summary', rPackage: 'Package', rVehicle: 'Vehicle', rName: 'Name', rPhone: 'Phone', from: 'from',
     missing: 'To join the queue, we still need: {list}.',
     mPackage: 'the package', mSize: 'the vehicle size', mCar: 'the make & model', mName: 'your name', mPhone: 'a valid phone (10 digits)',
-    findToggle: 'Already in line? Find my spot', findHelp: 'Enter the phone number you signed up with. The ticket number is optional.',
-    findPhone: 'Phone', findNum: 'Ticket number (optional)', findBtn: 'Find my spot →', finding: 'Searching…',
+    findToggle: 'Already in line? Find my spot', findHelp: 'Enter the phone number you signed up with and your ticket number. Otherwise, use your tracking link or ask at the counter.',
+    findPhone: 'Phone', findNum: 'Ticket number', findBtn: 'Find my spot →', finding: 'Searching…',
     found: 'Your spot was found — nothing changed in the queue.',
     updatedAt: 'Estimate from {h} · updated every 5 min', refreshNow: 'Refresh',
     saveTitle: 'Don’t lose your spot',
-    saveHelp: 'Keep this link: it reopens your ticket on any device. You can also find it again with your phone number.',
+    saveHelp: 'Keep this link: it reopens your ticket on any device. You can also find it again with your phone and ticket number. Only share this link with someone you trust.',
     shareBtn: 'Copy my tracking link', copied: 'Link copied ✓',
     now: 'Now', next: 'You’re next!',
     join: 'Join the queue →', joining: 'Joining…',
-    payNote: 'Pay after the job.',
+    payNote: 'Pay after the job. No automatic text messages: keep this page open.',
+    privacyNote: 'Your details are used to manage your visit. The public screen only shows ticket numbers.', privacyLink: 'Privacy',
     notifAsk: 'Turn on notifications to get alerted when it’s your turn.', notifBtn: 'Enable',
     yourNumber: 'Your number', ahead: 'Ahead of you', registered: 'Joined', yourTurn: 'Your turn',
     alertNext: 'You’re next — stay close to the counter.',
@@ -497,14 +502,15 @@ const T = {
     err: {
       FERME: 'Sign-ups are closed right now.',
       DEJA_INSCRIT: 'This phone number already has a spot in line today. Use “Find my spot”.',
-      TELEPHONE_REQUIS: 'A phone number is required for the reminder text.',
+      TELEPHONE_REQUIS: 'A phone number is required to reach you if needed.',
       VEHICULE_REQUIS: 'Please enter your vehicle’s make and model.',
+      BILLET_REQUIS: 'Please enter a valid ticket number.',
       INTROUVABLE: 'No spot found today with this information. Check the number or ask at the counter.',
       TELEPHONE_INVALIDE: 'Invalid phone number (10 digits).',
       NOM_INVALIDE: 'Please enter your name (at least 2 characters).',
       CHAMP_TROP_LONG: 'One of the fields is too long.',
       FILE_PLEINE: 'The queue is full right now. Please try again later.',
-      TROP_DE_DEMANDES: 'Too many sign-ups from this connection. Please try again later.',
+      TROP_DE_DEMANDES: 'Too many requests from this connection. Please try again in 10 minutes.',
       TROP_TARD: 'This package can no longer be finished today before closing. Pick a shorter one or come back on the next opening day.',
       FORFAIT_INVALIDE: 'Please pick a package.', TAILLE_INVALIDE: 'Please pick a vehicle size.',
       default: 'Connection error. Check your internet connection and try again.',
@@ -544,9 +550,8 @@ let selSize = null;
 const ETA_REFRESH_MS = 5 * 60000;   // l'estimation affichée sur le billet change aux 5 min (ou au rechargement)
 let shown = null, shownAt = 0, forceEta = false;
 const phoneDigits = (v) => String(v || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
-const clockNow = (date) => lang === 'en'
-  ? date.toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' })
-  : `${date.getHours()} h ${String(date.getMinutes()).padStart(2, '0')}`;
+const clockNow = (date) => fmtTime(date, lang);
+let submitting = false, connected = false;
 
 // Lien de suivi : index.html#t=<jeton> rouvre le billet sur n'importe quel appareil
 function adoptHashTicket() {
@@ -573,7 +578,10 @@ function applyLang() {
   $('f-car').placeholder = t('carPh');
   $('f-color').placeholder = t('colorPh');
   $('f-name').placeholder = t('namePh');
-  $('btn-reg').textContent = t('join');
+  $('btn-reg').textContent = t(submitting ? 'joining' : 'join');
+  $('privacy-link').href = 'privacy.html?lang=' + lang;
+  $('sizes').setAttribute('aria-label', t('stepVehicle'));
+  $('pkgs').setAttribute('aria-label', t('stepPackage'));
   document.title = `LUX·O·PLUS — ${lang === 'en' ? 'Live queue' : 'File d’attente'}`;
   pkgKey = null;
   renderAll();
@@ -631,6 +639,8 @@ function showNotice(key) {
   $('notice').className = 'msg ' + (key === 'found' ? 'msg-info' : 'msg-warn');
 }
 function setLive(on) {
+  connected = on;
+  renderSummary();
   $('live-dot').className = 'live-dot' + (on ? '' : ' off');
   $('offline').hidden = on;
 }
@@ -693,10 +703,10 @@ function renderPackages() {
 // « demain » / « lundi » + heure d'ouverture du prochain jour ouvert
 function nextOpening() {
   const days = status?.open_days || [];
-  const now = new Date();
+  const now = new Date(businessDate() + 'T12:00:00Z');
   for (let i = 1; i <= 7; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-    const iso = ((d.getDay() + 6) % 7) + 1;
+    const d = new Date(now.getTime() + i * 86400000);
+    const iso = ((d.getUTCDay() + 6) % 7) + 1;
     if (days.includes(iso)) {
       return { when: i === 1 ? t('tomorrow') : t('onDay', { day: T[lang].days[iso] }), open: fmtHour(status.open_time) };
     }
@@ -766,7 +776,7 @@ function renderSummary() {
   renderLate();
   const missing = missingFields();
   const noneFits = !(status.services || []).some((x) => x.fits_today);
-  $('btn-reg').disabled = missing.length > 0 || noneFits;
+  $('btn-reg').disabled = submitting || !connected || !status.is_open || missing.length > 0 || noneFits;
   $('missing').hidden = missing.length === 0;
   $('missing').textContent = t('missing', { list: missing.join(', ') });
 }
@@ -832,14 +842,14 @@ function renderTicketDetails(d) {
     .map((c) => `<span class="chip">${esc(c)}</span>`).join('');
   $('t-serving').textContent = servingTxt(d.serving_nums);
   $('t-ahead').textContent = d.ahead === 0 ? '0' : carsTxt(d.ahead);
-  $('t-eta').textContent = d.eta_minutes === 0 ? t('next') : `~${fmtDuration(d.eta_minutes)} · ${fmtClock(d.eta_minutes, lang)}`;
+  $('t-eta').textContent = d.eta_minutes === 0 ? t('next') : `~${fmtDuration(d.eta_minutes)} · ${fmtClock(d.eta_minutes, lang, shownAt)}`;
   $('t-duration').textContent = '~' + fmtDuration(d.minutes, lang);
-  $('t-ready').textContent = fmtClock(d.eta_minutes + d.minutes, lang);
+  $('t-ready').textContent = fmtClock(d.eta_minutes + d.minutes, lang, shownAt);
   $('t-price').textContent = t('priceTax', { p: fmtPrice(d.price, lang) });
   $('t-updated').textContent = t('updatedAt', { h: clockNow(new Date(shownAt)) });
   $('t-time-big').textContent = d.eta_minutes === 0 ? t('now') : fmtDuration(d.eta_minutes);
   $('t-time-sub').innerHTML = d.eta_minutes === 0 ? t('timeSubZero') : t('timeSub', {
-    cars: d.ahead === 0 ? '0' : carsTxt(d.ahead), start: fmtClock(d.eta_minutes, lang), alert: C.alertMinutes,
+    cars: d.ahead === 0 ? '0' : carsTxt(d.ahead), start: fmtClock(d.eta_minutes, lang, shownAt), alert: C.alertMinutes,
   });
   const pct = Math.round(((d.passed) / (d.passed + d.ahead + 1)) * 100);
   $('t-progress').style.width = Math.max(4, pct) + '%';
@@ -886,6 +896,7 @@ async function refresh() {
 
 $('register-form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
+  if (submitting) return;
   unlockAudio();
   const name = $('f-name').value.trim();
   const car = $('f-car').value.trim();
@@ -905,6 +916,7 @@ $('register-form').addEventListener('submit', async (ev) => {
   if (digits.length !== 10) return fail('TELEPHONE_INVALIDE', $('f-phone'));
 
   const btn = $('btn-reg');
+  submitting = true;
   btn.disabled = true; btn.textContent = t('joining');
   try {
     const { data, error } = await sb.rpc('join_queue', {
@@ -926,6 +938,7 @@ $('register-form').addEventListener('submit', async (ev) => {
     if ((e?.message || '').includes('DEJA_INSCRIT')) openFind(phone);
     pkgKey = null; refresh();   // ex. TROP_TARD : rafraîchir les forfaits disponibles
   } finally {
+    submitting = false;
     btn.textContent = t('join');
     renderSummary();
   }
@@ -955,6 +968,9 @@ $('find-form').addEventListener('submit', async (ev) => {
     err.textContent = T[lang].err[phone ? 'TELEPHONE_INVALIDE' : 'TELEPHONE_REQUIS'];
     err.hidden = false;
     return;
+  }
+  if (!numTxt || !Number.isSafeInteger(Number(numTxt)) || Number(numTxt) < 1 || Number(numTxt) > 2147483647) {
+    err.textContent = T[lang].err.BILLET_REQUIS; err.hidden = false; $('f-find-num').focus(); return;
   }
   const btn = $('btn-find');
   btn.disabled = true; btn.textContent = t('finding');

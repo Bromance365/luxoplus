@@ -1,10 +1,11 @@
 // Parcours sur l'URL déployée (mode démo : client, personnel et TV partagent le stockage du navigateur).
 import { chromium } from 'playwright-core';
+import { chromiumPath } from './browser.mjs';
 import { mkdirSync } from 'node:fs';
 const base = process.argv[2]; if (!base) throw new Error('usage: node live-check.mjs https://site');
 mkdirSync('shots', { recursive: true });
 const res = []; const ok = (n, c, note = '') => res.push([c ? 'PASS' : 'FAIL', n, note]);
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium', args: ['--no-sandbox', ...(process.env.TRUST_SPKI ? ['--ignore-certificate-errors-spki-list=' + process.env.TRUST_SPKI] : [])] });
+const browser = await chromium.launch({ executablePath: chromiumPath() });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'fr-CA', isMobile: true });
 const errors = [];
 const mk = async () => { const p = await ctx.newPage(); p.on('console', (m) => { if (m.type() === 'error' && !/ERR_|fonts\.g|Failed to load resource/.test(m.text())) errors.push(m.text()); }); p.on('pageerror', (e) => errors.push('pageerror ' + e.message)); return p; };

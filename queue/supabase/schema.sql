@@ -1,3 +1,5 @@
+begin;
+
 -- =====================================================================
 --  LUX·O·PLUS — File d'attente du garage (schéma Supabase)
 --  À exécuter UNE fois dans Supabase › SQL Editor (projet neuf de préférence).
@@ -69,6 +71,8 @@ create table if not exists public.queue (
   finished_at   timestamptz,
   unique (service_day, num)
 );
+create unique index if not exists queue_one_serving_per_bay on public.queue (service_day, bay) where status = 'serving';
+create unique index if not exists queue_one_active_per_phone on public.queue (service_day, phone) where status in ('waiting', 'serving');
 create index if not exists queue_day_status_num on public.queue (service_day, status, num);
 
 -- Tentatives de « Retrouver ma place » (anti-devinette)
@@ -146,7 +150,7 @@ begin
   for r in
     select greatest(5, s.minutes - extract(epoch from now() - q.called_at) / 60) as rem
       from queue q join services s on s.code = q.service_code
-     where q.status = 'serving'
+     where q.status = 'serving' and q.service_day = p_day
   loop
     v_free := v_free || r.rem;
   end loop;
@@ -188,7 +192,7 @@ declare
   v      queue;
 begin
   select min(b) into v_bay from generate_series(1, v_bays) b
-   where b not in (select bay from queue where status = 'serving' and bay is not null);
+   where b not in (select bay from queue where status = 'serving' and service_day = local_today() and bay is not null);
   if v_bay is null then return null; end if;
 
   select * into v from queue
@@ -277,6 +281,11 @@ begin
   -- Verrou : une seule inscription à la fois → numéros uniques et séquentiels
   perform pg_advisory_xact_lock(hashtext('queue_num'));
   v_today := local_today();
+  -- Recheck after the lock: staff may have paused while this request waited.
+  select * into s from settings where id = 1;
+  if not is_open_now() then raise exception 'FERME'; end if;
+  update queue set status = 'cancelled', cancelled_by = 'system', finished_at = now()
+   where status in ('waiting', 'serving') and service_day < v_today;
 
   if (select count(*) from queue where service_day = v_today and status = 'waiting') >= s.max_waiting then
     raise exception 'FILE_PLEINE';
@@ -351,7 +360,7 @@ begin
 end $$;
 
 -- « Retrouver ma place » : téléphone (numéro de billet facultatif) → jeton du billet du jour.
--- Un téléphone n'a qu'un billet actif par jour (voir DEJA_INSCRIT), donc il suffit.
+-- Both phone and ticket number are required; phone alone cannot recover a token.
 -- Renvoie null si introuvable. Limité à 10 essais par 10 minutes par connexion.
 create or replace function public.find_ticket(p_phone text, p_num int default null) returns uuid
 language plpgsql security definer set search_path = public as $$
@@ -365,6 +374,8 @@ begin
   v_ip := btrim(split_part(coalesce(
             nullif(current_setting('request.headers', true), '')::json ->> 'x-forwarded-for', ''), ',', 1));
   v_hash := md5(coalesce(nullif(v_ip, ''), 'inconnu'));
+  -- Serialize the budget check so parallel requests cannot bypass the limit.
+  perform pg_advisory_xact_lock(hashtext('lookup:' || v_hash));
   delete from lookup_attempts where at < now() - interval '1 day';
   if (select count(*) from lookup_attempts where ip_hash = v_hash and at > now() - interval '10 minutes') >= 10 then
     raise exception 'TROP_DE_DEMANDES';
@@ -373,11 +384,11 @@ begin
 
   if length(v_digits) = 11 and left(v_digits, 1) = '1' then v_digits := substr(v_digits, 2); end if;
   -- Pas d'exception ici : elle annulerait l'enregistrement de la tentative ci-dessus.
-  if length(v_digits) <> 10 then return null; end if;
+  if length(v_digits) <> 10 or p_num is null or p_num < 1 then return null; end if;
   v_phone := substr(v_digits, 1, 3) || '-' || substr(v_digits, 4, 3) || '-' || substr(v_digits, 7, 4);
 
   select token into v_token from queue
-   where service_day = local_today() and phone = v_phone and (p_num is null or num = p_num)
+   where service_day = local_today() and phone = v_phone and num = p_num
      and status in ('waiting', 'serving', 'done')
    order by (status <> 'done') desc, num desc      -- le billet actif d'abord, sinon le plus récent
    limit 1;
@@ -390,10 +401,9 @@ declare v queue;
 begin
   perform pg_advisory_xact_lock(hashtext('queue_num'));
   update queue set status = 'cancelled', cancelled_by = 'client', finished_at = now()
-   where token = p_token and status in ('waiting', 'serving')
+   where token = p_token and status = 'waiting'
   returning * into v;
   if not found then return false; end if;
-  if v.called_at is not null then perform _promote_next(); end if;   -- sa baie se libère
   return true;
 end $$;
 
@@ -417,7 +427,7 @@ begin
                       select q.id, q.num, q.name, q.car, q.color, q.service_code, q.vehicle_size, q.price,
                              q.phone, q.called_at, q.bay, s.minutes
                         from queue q join services s on s.code = q.service_code
-                       where q.status = 'serving') x), '[]'::json),
+                       where q.status = 'serving' and q.service_day = v_today) x), '[]'::json),
     'waiting',     coalesce((select json_agg(x order by x.num) from (
                       select id, num, name, car, color, service_code, vehicle_size, price, phone, created_at
                         from queue where service_day = v_today and status = 'waiting') x), '[]'::json),
@@ -439,7 +449,7 @@ begin
   perform pg_advisory_xact_lock(hashtext('queue_num'));
   -- Les attentes oubliées des jours précédents expirent
   update queue set status = 'cancelled', cancelled_by = 'system', finished_at = now()
-   where status = 'waiting' and service_day < local_today();
+   where status in ('waiting', 'serving') and service_day < local_today();
   return coalesce(_promote_next(), json_build_object('num', null));
 end $$;
 
@@ -448,6 +458,7 @@ create or replace function public.finish_client(p_id bigint) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   perform assert_admin();
+  perform pg_advisory_xact_lock(hashtext('queue_num'));
   update queue set status = 'done', finished_at = now() where id = p_id and status = 'serving';
 end $$;
 
@@ -467,6 +478,8 @@ create or replace function public.set_accepting(p_on boolean) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   perform assert_admin();
+  if p_on is null then raise exception 'PARAMETRE_INVALIDE'; end if;
+  perform pg_advisory_xact_lock(hashtext('queue_num'));
   update settings set accepting = p_on where id = 1;
 end $$;
 
@@ -474,17 +487,22 @@ create or replace function public.set_bays(p_bays int) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   perform assert_admin();
-  if p_bays < 1 or p_bays > 20 then raise exception 'BAIES_INVALIDE'; end if;
+  if p_bays is null or p_bays < 1 or p_bays > 20 then raise exception 'BAIES_INVALIDE'; end if;
+  perform pg_advisory_xact_lock(hashtext('queue_num'));
+  if exists (select 1 from queue where status = 'serving' and service_day = local_today() and bay > p_bays) then
+    raise exception 'BAIE_OCCUPEE';
+  end if;
   update settings set bays = p_bays where id = 1;
 end $$;
 
--- Remise à zéro manuelle : efface la journée en cours, les numéros repartent à 1.
+-- Clear active tickets without deleting completed services or reusing numbers.
 create or replace function public.reset_today() returns void
 language plpgsql security definer set search_path = public as $$
 begin
   perform assert_admin();
   perform pg_advisory_xact_lock(hashtext('queue_num'));
-  delete from queue where service_day = local_today() or status in ('waiting', 'serving');
+  update queue set status = 'cancelled', cancelled_by = 'staff', finished_at = now()
+   where service_day = local_today() and status in ('waiting', 'serving');
 end $$;
 
 -- Loi 25 : on ne garde pas les renseignements personnels plus longtemps que nécessaire.
@@ -493,8 +511,10 @@ create or replace function public.purge_personal_data(p_days int default 30) ret
 language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
+  if p_days is null or p_days < 1 then raise exception 'RETENTION_INVALIDE'; end if;
+  delete from lookup_attempts where at < now() - interval '1 day';
   update queue set name = 'Client', car = null, color = null, phone = null, ip_hash = null
-   where service_day < local_today() - p_days and (phone is not null or name <> 'Client' or car is not null);
+   where service_day < local_today() - p_days and (phone is not null or name <> 'Client' or car is not null or color is not null or ip_hash is not null);
   get diagnostics n = row_count;
   return n;
 end $$;
@@ -521,7 +541,7 @@ begin
     'waiting_count', (select count(*) from queue where service_day = v_today and status = 'waiting'),
     'serving',       coalesce((select json_agg(x order by x.bay) from (
                         select q.num, q.bay, q.service_code, sv.minutes as total_minutes,
-                               left(split_part(btrim(q.name), ' ', 1), 20) as first_name,
+                               ''::text as first_name, -- Public screens identify tickets by number only.
                                greatest(0, ceil(sv.minutes - extract(epoch from now() - q.called_at) / 60))::int as minutes_left
                           from queue q join services sv on sv.code = q.service_code
                          where q.status = 'serving' and q.service_day = v_today) x), '[]'::json),
@@ -572,3 +592,5 @@ end $$;
 --
 --  select cron.schedule('purge-donnees-perso', '0 8 * * *', $$select public.purge_personal_data(30)$$);
 -- ---------------------------------------------------------------------
+
+commit;

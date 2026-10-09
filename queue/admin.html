@@ -11,6 +11,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="brand.css">
 <style>
+  .admin-lang { display: flex; gap: 4px; margin-bottom: 12px; }
+  .admin-lang button { padding: 8px 12px; border: 1px solid var(--hairline-strong); border-radius: 20px; background: transparent; cursor: pointer; }
+  .admin-lang button[aria-pressed="true"] { background: var(--blue); }
   /* Connexion */
   .login { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; }
   .login .logo { margin-bottom: 26px; }
@@ -114,28 +117,44 @@
 <!-- CONNEXION -->
 <div class="login page" id="login" hidden>
   <div class="logo"><span class="emblem-slot"></span>
-    <span><span class="wordmark">LUX<span class="dot"></span>O<span class="dot"></span>PLUS</span><span class="tagline">Personnel · Garage</span></span>
+    <span><span class="wordmark">LUX<span class="dot"></span>O<span class="dot"></span>PLUS</span><span class="tagline" data-admin-i18n="staff">Personnel · Garage</span></span>
   </div>
+  <div class="admin-lang"><button type="button" data-admin-lang="fr">FR</button><button type="button" data-admin-lang="en">EN</button></div>
   <form class="login-card glass" id="login-form">
-    <div class="eyebrow">— Accès réservé —</div>
-    <h1 class="display">Tableau de <em>bord.</em></h1>
-    <p class="serif-note">Connectez-vous pour gérer la file d’attente.</p>
-    <div class="field"><label class="label" for="login-email">Courriel</label>
+    <div class="eyebrow" data-admin-i18n="restricted">— Accès réservé —</div>
+    <h1 class="display" data-admin-html="dashboardTitle">Tableau de <em>bord.</em></h1>
+    <p class="serif-note" data-admin-i18n="loginHelp">Connectez-vous pour gérer la file d’attente.</p>
+    <div class="field"><label class="label" for="login-email" data-admin-i18n="email">Courriel</label>
       <input class="input" type="email" id="login-email" autocomplete="username" required></div>
-    <div class="field"><label class="label" for="login-pwd">Mot de passe</label>
+    <div class="field"><label class="label" for="login-pwd" data-admin-i18n="password">Mot de passe</label>
       <input class="input" type="password" id="login-pwd" autocomplete="current-password" required></div>
-    <button class="btn btn-primary btn-block" id="btn-login" type="submit">Entrer →</button>
+    <button class="btn btn-primary btn-block" id="btn-login" type="submit" data-admin-i18n="enter">Entrer →</button>
+    <button class="btn btn-ghost btn-block" id="btn-forgot" type="button" data-admin-i18n="forgot">Mot de passe oublié ?</button>
     <div class="login-error" id="login-error" role="alert"></div>
+  </form>
+</div>
+
+<!-- STAFF INVITATION / PASSWORD RECOVERY -->
+<div class="login page" id="password-setup" hidden>
+  <form class="login-card glass" id="password-form">
+    <h1 class="display" data-admin-i18n="setupTitle">Votre mot de passe</h1>
+    <p data-admin-i18n="setupHelp">Choisissez un mot de passe pour votre accès personnel.</p>
+    <div class="field"><label class="label" for="new-password" data-admin-i18n="newPassword">Nouveau mot de passe</label>
+      <input class="input" type="password" id="new-password" autocomplete="new-password" minlength="12" required></div>
+    <div class="field"><label class="label" for="confirm-password" data-admin-i18n="confirmPassword">Confirmer le mot de passe</label>
+      <input class="input" type="password" id="confirm-password" autocomplete="new-password" minlength="12" required></div>
+    <button class="btn btn-primary btn-block" id="btn-password" type="submit" data-admin-i18n="savePassword">Enregistrer</button>
+    <div class="login-error" id="password-error" role="alert"></div>
   </form>
 </div>
 
 <!-- CONFIRMATION REMISE À ZÉRO -->
 <div class="overlay" id="reset-dialog" hidden>
   <div class="dialog glass" role="dialog" aria-modal="true" aria-labelledby="reset-title">
-    <h2 id="reset-title">Remettre la file à zéro ?</h2>
-    <p>Tous les clients d’aujourd’hui (en attente, en service et historique) seront effacés et les numéros recommenceront à 1.</p>
-    <button class="btn btn-danger" id="btn-reset-yes" type="button">Oui, remettre à zéro</button>
-    <button class="btn btn-ghost" id="btn-reset-no" type="button">Annuler</button>
+    <h2 id="reset-title" data-admin-i18n="clearTitle">Vider les billets actifs ?</h2>
+    <p data-admin-i18n="clearHelp">Les billets en attente et en service seront annulés. Les services terminés, les revenus et la numérotation seront conservés.</p>
+    <button class="btn btn-danger" id="btn-reset-yes" type="button" data-admin-i18n="clearConfirm">Oui, annuler les billets actifs</button>
+    <button class="btn btn-ghost" id="btn-reset-no" type="button" data-admin-i18n="cancel">Annuler</button>
   </div>
 </div>
 
@@ -143,9 +162,9 @@
 <div class="page wrap" id="dash" hidden>
   <header class="head">
     <div class="logo"><span class="emblem-slot"></span>
-      <span><span class="wordmark">LUX<span class="dot"></span>O<span class="dot"></span>PLUS</span><span class="tagline">Tableau de bord</span></span>
+      <span><span class="wordmark">LUX<span class="dot"></span>O<span class="dot"></span>PLUS</span><span class="tagline" data-admin-i18n="dashboard">Tableau de bord</span></span>
     </div>
-    <div class="head-right">
+    <div class="head-right"><div class="admin-lang"><button type="button" data-admin-lang="fr">FR</button><button type="button" data-admin-lang="en">EN</button></div>
       <span class="status-pill" title="Connexion"><span class="live-dot off" id="live-dot"></span><span id="live-label">…</span></span>
       <button class="status-pill open-btn" id="btn-open" type="button" title="Suspendre / rouvrir les inscriptions"></button>
     </div>
@@ -157,14 +176,14 @@
   </div>
 
   <section class="stats">
-    <div class="stat glass"><div class="label">En attente</div><div class="stat-val glow" id="s-waiting">0</div></div>
-    <div class="stat glass"><div class="label">En service</div><div class="stat-val" id="s-serving">0</div></div>
-    <div class="stat glass"><div class="label">Terminés</div><div class="stat-val ok" id="s-done">0</div></div>
-    <div class="stat glass"><div class="label">Revenus (avant taxes)</div><div class="stat-val" id="s-revenue">0 $</div></div>
+    <div class="stat glass"><div class="label" data-admin-i18n="waiting">En attente</div><div class="stat-val glow" id="s-waiting">0</div></div>
+    <div class="stat glass"><div class="label" data-admin-i18n="serving">En service</div><div class="stat-val" id="s-serving">0</div></div>
+    <div class="stat glass"><div class="label" data-admin-i18n="done">Terminés</div><div class="stat-val ok" id="s-done">0</div></div>
+    <div class="stat glass"><div class="label" data-admin-i18n="revenue">Revenus (avant taxes)</div><div class="stat-val" id="s-revenue">0 $</div></div>
   </section>
 
   <div class="section-head">
-    <h2>Baies</h2>
+    <h2 data-admin-i18n="bays">Baies</h2>
     <div class="tools">
       <div class="stepper" aria-label="Nombre de baies">
         <button type="button" id="bay-minus" aria-label="Retirer une baie">−</button>
@@ -176,24 +195,25 @@
   <div class="bays" id="bays"></div>
   <button class="btn btn-primary btn-block call-next" id="btn-next" type="button"></button>
 
-  <div class="section-head"><h2>File d’attente</h2><span class="label" id="wait-info" style="margin-left:auto;"></span></div>
+  <div class="section-head"><h2 data-admin-i18n="queue">File d’attente</h2><span class="label" id="wait-info" style="margin-left:auto;"></span></div>
   <div class="list" id="waiting"></div>
 
-  <div class="section-head"><h2>Historique du jour</h2></div>
+  <div class="section-head"><h2 data-admin-i18n="history">Historique du jour</h2></div>
   <div class="history glass" id="history"></div>
 
   <div class="footer-actions">
-    <a class="btn btn-ghost" id="link-tv" href="tv.html" target="_blank" rel="noopener">📺 Écran de la salle d’attente</a>
-    <button class="btn btn-danger" id="btn-reset" type="button">↺ Remettre la file à zéro</button>
-    <button class="btn btn-ghost" id="btn-logout" type="button">Se déconnecter</button>
+    <a class="btn btn-ghost" id="link-tv" href="tv.html" target="_blank" rel="noopener" data-admin-i18n="tv">📺 Écran de la salle d’attente</a>
+    <button class="btn btn-danger" id="btn-reset" type="button" data-admin-i18n="clear">↺ Vider les billets actifs</button>
+    <button class="btn btn-ghost" id="btn-logout" type="button" data-admin-i18n="logout">Se déconnecter</button>
   </div>
 </div>
 
 <script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase.js"></script>
 <script src="demo-backend.js"></script>
 <script>
 const C = window.APP_CONFIG;
+let needsPasswordSetup = /type=(recovery|invite)/.test(location.hash);
 const sb = supabase.createClient(C.supabaseUrl, C.supabaseKey);
 const $ = (id) => document.getElementById(id);
 document.querySelectorAll('.emblem-slot').forEach((el) => { el.outerHTML = luxEmblem(); });
@@ -203,11 +223,156 @@ let seenDepartures = null;
 let notifQueue = [];
 let channel = null;
 let pollTimer = null;
-let busy = false;
+let busy = false, viewVersion = 0;
+
+const ADMIN_TEXT = {
+  "fr": {
+    "staff": "Personnel · Garage",
+    "restricted": "— Accès réservé —",
+    "dashboard": "Tableau de bord",
+    "loginHelp": "Connectez-vous pour gérer la file d’attente.",
+    "email": "Courriel",
+    "password": "Mot de passe",
+    "enter": "Entrer →",
+    "clearTitle": "Vider les billets actifs ?",
+    "clearHelp": "Les billets en attente et en service seront annulés. Les services terminés, les revenus et la numérotation seront conservés.",
+    "clearConfirm": "Oui, annuler les billets actifs",
+    "cancel": "Annuler",
+    "waiting": "En attente",
+    "serving": "En service",
+    "done": "Terminés",
+    "revenue": "Revenus (avant taxes)",
+    "bays": "Baies",
+    "queue": "File d’attente",
+    "history": "Historique du jour",
+    "tv": "📺 Écran de la salle d’attente",
+    "clear": "↺ Vider les billets actifs",
+    "logout": "Se déconnecter",
+    "dashboardTitle": "Tableau de <em>bord.</em>",
+    "forgot": "Mot de passe oublié ?",
+    "setupTitle": "Votre mot de passe",
+    "setupHelp": "Choisissez un mot de passe pour votre accès personnel.",
+    "newPassword": "Nouveau mot de passe (12 caractères minimum)",
+    "confirmPassword": "Confirmer le mot de passe",
+    "savePassword": "Enregistrer",
+    "passwordMismatch": "Les mots de passe doivent être identiques et contenir au moins 12 caractères.",
+    "passwordFailed": "Le lien a expiré ou la mise à jour a échoué. Demandez un nouveau lien de connexion.",
+    "resetSent": "Si ce compte existe, un lien de réinitialisation a été envoyé.",
+    "emailRequired": "Entrez votre courriel pour recevoir un lien.",
+    "credentials": "Courriel ou mot de passe incorrect.",
+    "connectionError": "Erreur de connexion. Réessayez.",
+    "noAccess": "Ce compte n’a pas accès au tableau de bord.",
+    "expired": "Session expirée. Reconnectez-vous.",
+    "live": "En direct",
+    "offline": "Hors ligne",
+    "paused": "Inscriptions suspendues · Rouvrir",
+    "open": "Inscriptions ouvertes · Suspendre",
+    "outsideHours": "Hors des heures",
+    "bayCount": "{n} baie(s)",
+    "bay": "Baie",
+    "free": "Libre",
+    "noWaiting": "Aucun client en attente",
+    "allBusy": "Toutes les baies sont occupées",
+    "call": "⏭ Appeler le #{num} — {service}",
+    "waitInfo": "Nouveau client : début dans ~{time}",
+    "remove": "Retirer",
+    "removeConfirm": "Retirer {name} ?",
+    "left": "Parti",
+    "removed": "Retiré",
+    "expiredTicket": "Expiré",
+    "noHistory": "Aucun client terminé aujourd’hui",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "overdue": "dépassé",
+    "occupiedBay": "Terminez le service dans cette baie avant de la retirer.",
+    "actionError": "L’action a échoué. Vérifiez votre connexion et réessayez.",
+    "departure": "{name} (#{num}) a quitté la file d’attente.",
+    "demoHelp": "Mode démo : cliquez simplement sur « Entrer »."
+  },
+  "en": {
+    "staff": "Staff · Shop",
+    "restricted": "— Staff access —",
+    "dashboard": "Dashboard",
+    "loginHelp": "Sign in to manage the queue.",
+    "email": "Email",
+    "password": "Password",
+    "enter": "Sign in →",
+    "clearTitle": "Clear active tickets?",
+    "clearHelp": "Waiting and in-service tickets will be cancelled. Completed services, revenue and ticket numbering are preserved.",
+    "clearConfirm": "Yes, cancel active tickets",
+    "cancel": "Cancel",
+    "waiting": "Waiting",
+    "serving": "In service",
+    "done": "Completed",
+    "revenue": "Revenue (before tax)",
+    "bays": "Bays",
+    "queue": "Queue",
+    "history": "Today’s history",
+    "tv": "📺 Waiting-room display",
+    "clear": "↺ Clear active tickets",
+    "logout": "Sign out",
+    "dashboardTitle": "Staff <em>dashboard.</em>",
+    "forgot": "Forgot password?",
+    "setupTitle": "Your password",
+    "setupHelp": "Choose a password for your staff account.",
+    "newPassword": "New password (at least 12 characters)",
+    "confirmPassword": "Confirm password",
+    "savePassword": "Save password",
+    "passwordMismatch": "Passwords must match and contain at least 12 characters.",
+    "passwordFailed": "The link expired or the update failed. Request a new sign-in link.",
+    "resetSent": "If this account exists, a reset link has been sent.",
+    "emailRequired": "Enter your email to receive a link.",
+    "credentials": "Incorrect email or password.",
+    "connectionError": "Connection error. Please try again.",
+    "noAccess": "This account does not have staff access.",
+    "expired": "Session expired. Sign in again.",
+    "live": "Live",
+    "offline": "Offline",
+    "paused": "Sign-ups paused · Reopen",
+    "open": "Sign-ups open · Pause",
+    "outsideHours": "Outside opening hours",
+    "bayCount": "{n} bay(s)",
+    "bay": "Bay",
+    "free": "Free",
+    "noWaiting": "No customers waiting",
+    "allBusy": "All bays are occupied",
+    "call": "⏭ Call #{num} — {service}",
+    "waitInfo": "New arrival: starts in ~{time}",
+    "remove": "Remove",
+    "removeConfirm": "Remove {name}?",
+    "left": "Left",
+    "removed": "Removed",
+    "expiredTicket": "Expired",
+    "noHistory": "No completed customers today",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "overdue": "overdue",
+    "occupiedBay": "Complete the service in this bay before removing it.",
+    "actionError": "The action failed. Check your connection and try again.",
+    "departure": "{name} (#{num}) left the queue.",
+    "demoHelp": "Demo mode: just click “Sign in”."
+  }
+};
+let adminLang = (() => { try { return localStorage.getItem('lux_lang') === 'en' ? 'en' : 'fr'; } catch { return 'fr'; } })();
+const tr = (key, vars = {}) => ADMIN_TEXT[adminLang][key].replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+function applyAdminLang() {
+  document.documentElement.lang = adminLang;
+  document.title = 'LUX·O·PLUS — ' + tr('dashboard');
+  document.querySelectorAll('[data-admin-i18n]').forEach((el) => { el.textContent = tr(el.dataset.adminI18n); });
+  document.querySelectorAll('[data-admin-html]').forEach((el) => { el.innerHTML = tr(el.dataset.adminHtml); });
+  document.querySelectorAll('[data-admin-lang]').forEach((el) => { el.setAttribute('aria-pressed', String(el.dataset.adminLang === adminLang)); });
+  if (C.demo) { document.querySelector('.login-card p').textContent = tr('demoHelp'); $('btn-forgot').hidden = true; }
+  if (data) render();
+}
+document.querySelectorAll('[data-admin-lang]').forEach((el) => el.addEventListener('click', () => {
+  adminLang = el.dataset.adminLang;
+  try { localStorage.setItem('lux_lang', adminLang); } catch {}
+  applyAdminLang();
+}));
 
 const svcName = (code) => C.services[code]?.name || code;
-const sizeName = (code) => C.sizes[code]?.fr || code;
-const money = (n) => fmtPrice(n, 'fr');
+const sizeName = (code) => C.sizes[code]?.[adminLang] || code;
+const money = (n) => fmtPrice(n, adminLang);
 const telLink = (p) => p ? `<a href="tel:${esc(p.replace(/\D/g, ''))}">${esc(p)}</a>` : '';
 const minutesSince = (iso) => Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
 
@@ -229,13 +394,16 @@ function playSound() {
 
 // ---------- Connexion ----------
 function showLogin(msg = '') {
+  viewVersion++;
   stopLive();
   $('dash').hidden = true;
+  $('password-setup').hidden = true;
   $('login').hidden = false;
   $('login-error').textContent = msg;
 }
 async function enterDashboard() {
-  if (!(await loadData(true))) return;
+  const version = viewVersion;
+  if (!(await loadData(true)) || version !== viewVersion) return;
   $('login').hidden = true;
   $('dash').hidden = false;
   startLive();
@@ -245,14 +413,49 @@ $('login-form').addEventListener('submit', async (ev) => {
   const btn = $('btn-login');
   btn.disabled = true;
   $('login-error').textContent = '';
-  const { error } = await sb.auth.signInWithPassword({ email: $('login-email').value.trim(), password: $('login-pwd').value });
-  $('login-pwd').value = '';
-  btn.disabled = false;
-  if (error) {
-    $('login-error').textContent = error.status === 400 ? 'Courriel ou mot de passe incorrect.' : 'Erreur de connexion. Réessayez.';
-    return;
-  }
-  enterDashboard();
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email: $('login-email').value.trim(), password: $('login-pwd').value });
+    if (error) throw error;
+    await enterDashboard();
+  } catch (e) { $('login-error').textContent = e.status === 400 ? tr('credentials') : tr('connectionError'); }
+  finally { $('login-pwd').value = ''; btn.disabled = false; }
+});
+$('btn-forgot').addEventListener('click', async () => {
+  const email = $('login-email');
+  if (!email.value.trim() || !email.checkValidity()) { $('login-error').textContent = tr('emailRequired'); email.focus(); return; }
+  const btn = $('btn-forgot'); btn.disabled = true;
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email.value.trim(), { redirectTo: new URL('admin.html', location.href).href });
+    if (error) throw error;
+    $('login-error').textContent = tr('resetSent');
+  } catch { $('login-error').textContent = tr('connectionError'); }
+  finally { btn.disabled = false; }
+});
+function showPasswordSetup() {
+  viewVersion++;
+  stopLive(); $('login').hidden = true; $('dash').hidden = true;
+  $('password-setup').hidden = false; $('new-password').focus();
+}
+$('password-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const password = $('new-password').value;
+  if (password.length < 12 || password !== $('confirm-password').value) { $('password-error').textContent = tr('passwordMismatch'); return; }
+  const btn = $('btn-password'); btn.disabled = true;
+  try {
+    const { error } = await sb.auth.updateUser({ password });
+    if (error) throw error;
+    needsPasswordSetup = false; $('password-form').reset(); $('password-error').textContent = '';
+    $('password-setup').hidden = true;
+    await enterDashboard();
+  } catch { $('password-error').textContent = tr('passwordFailed'); }
+  finally { btn.disabled = false; }
+});
+sb.auth.onAuthStateChange?.((event, session) => {
+  // Schedule outside the auth callback to avoid a Supabase auth lock deadlock.
+  setTimeout(() => {
+    if (event === 'PASSWORD_RECOVERY' || (session && needsPasswordSetup)) showPasswordSetup();
+    if (event === 'SIGNED_OUT') { data = null; showLogin(); }
+  }, 0);
 });
 $('btn-logout').addEventListener('click', async () => {
   await sb.auth.signOut();
@@ -262,16 +465,19 @@ $('btn-logout').addEventListener('click', async () => {
 
 // ---------- Données ----------
 async function loadData(initial = false) {
+  const version = viewVersion;
+  try {
   const { data: d, error } = await sb.rpc('get_admin_dashboard');
+  if (version !== viewVersion) return false;
   if (error) {
     if ((error.message || '').includes('ACCES_REFUSE')) {
       await sb.auth.signOut();
-      showLogin('Ce compte n’a pas accès au tableau de bord.');
+      showLogin(tr('noAccess'));
       return false;
     }
-    if (error.code === 'PGRST301' || error.status === 401) { showLogin('Session expirée. Reconnectez-vous.'); return false; }
+    if (error.code === 'PGRST301' || error.status === 401) { showLogin(tr('expired')); return false; }
     setLive(false);
-    if (initial) showLogin('Erreur de connexion. Réessayez.');
+    if (initial) showLogin(tr('connectionError'));
     return false;
   }
   detectDepartures(d);
@@ -279,6 +485,7 @@ async function loadData(initial = false) {
   render();
   setLive(true);
   return true;
+  } catch { setLive(false); if (initial) showLogin(tr('connectionError')); return false; }
 }
 
 function detectDepartures(d) {
@@ -287,13 +494,13 @@ function detectDepartures(d) {
   for (const h of departures) {
     if (seenDepartures.has(h.id)) continue;
     seenDepartures.add(h.id);
-    pushNotif(`${h.name} (#${h.num}) a quitté la file d’attente` + (h.called_at ? ' — sa baie a été libérée.' : '.'));
+    pushNotif(tr('departure', { name: h.name, num: h.num }));
   }
 }
 
 function setLive(on) {
   $('live-dot').className = 'live-dot' + (on ? '' : ' off');
-  $('live-label').textContent = on ? 'En direct' : 'Hors ligne';
+  $('live-label').textContent = on ? tr('live') : tr('offline');
 }
 
 // Temps réel (Supabase Realtime) + rafraîchissement de secours toutes les 15 s
@@ -307,6 +514,7 @@ function startLive() {
   pollTimer = setInterval(() => loadData(), 15000);
 }
 function stopLive() {
+  clearTimeout(debounce);
   if (channel) { sb.removeChannel(channel); channel = null; }
   clearInterval(pollTimer);
 }
@@ -315,15 +523,18 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && !$
 // ---------- Rendu ----------
 function render() {
   const d = data;
+  if (!d) return;
   $('s-waiting').textContent = d.waiting.length;
   $('s-serving').textContent = `${d.serving.length} / ${d.bays}`;
   $('s-done').textContent = d.done_count;
   $('s-revenue').textContent = money(d.revenue);
 
   $('btn-open').innerHTML = `<span class="live-dot ${d.is_open ? '' : 'closed'}"></span>` +
-    (!d.accepting ? 'Inscriptions suspendues · Rouvrir' : d.is_open ? 'Inscriptions ouvertes · Suspendre' : 'Hors des heures');
+    (!d.accepting ? tr('paused') : d.is_open ? tr('open') : tr('outsideHours'));
   $('btn-open').disabled = busy || (d.accepting && !d.is_open);
-  $('bay-count').textContent = `${d.bays} baie${d.bays > 1 ? 's' : ''}`;
+  $('bay-count').textContent = tr('bayCount', { n: d.bays });
+  $('bay-minus').disabled = busy || d.bays <= 1 || d.serving.some((s) => s.bay >= d.bays);
+  $('bay-plus').disabled = busy || d.bays >= 20;
 
   // Baies
   const byBay = Object.fromEntries(d.serving.map((s) => [s.bay, s]));
@@ -332,7 +543,7 @@ function render() {
   for (let b = 1; b <= d.bays; b++) {
     const s = byBay[b];
     if (!s) {
-      cards.push(`<div class="bay bay-free glass"><span class="label">Baie ${b}</span><div class="bay-num">Libre</div></div>`);
+      cards.push(`<div class="bay bay-free glass"><span class="label">${tr('bay')} ${b}</span><div class="bay-num">${tr('free')}</div></div>`);
       continue;
     }
     cards.push(bayCard(s, b));
@@ -343,14 +554,14 @@ function render() {
   const next = d.waiting[0];
   const freeBays = d.bays - d.serving.length;
   $('btn-next').disabled = busy || !next || freeBays <= 0;
-  $('btn-next').textContent = !next ? 'Aucun client en attente'
-    : freeBays <= 0 ? 'Toutes les baies sont occupées'
-    : `⏭ Appeler le #${next.num} — ${svcName(next.service_code)}`;
+  $('btn-next').textContent = !next ? tr('noWaiting')
+    : freeBays <= 0 ? tr('allBusy')
+    : tr('call', { num: next.num, service: svcName(next.service_code) });
 
   // File d'attente
-  $('wait-info').textContent = d.waiting.length ? `Nouveau client : début dans ~${fmtDuration(d.wait_minutes)}` : '';
+  $('wait-info').textContent = d.waiting.length ? tr('waitInfo', { time: fmtDuration(d.wait_minutes, adminLang) }) : '';
   $('waiting').innerHTML = d.waiting.length === 0
-    ? '<div class="empty glass">Aucun client en attente</div>'
+    ? `<div class="empty glass">${tr('noWaiting')}</div>`
     : d.waiting.map((c, i) => `
       <div class="item glass ${i === 0 ? 'first' : ''}">
         <div class="item-num">${c.num}</div>
@@ -362,19 +573,19 @@ function render() {
           <div class="item-price">${money(c.price)}</div>
           <div class="label item-time">${minutesSince(c.created_at)} min</div>
         </div>
-        <button class="icon-btn" type="button" data-remove="${c.id}" data-label="${esc(c.name)} (#${c.num})" aria-label="Retirer ${esc(c.name)}">×</button>
+        <button class="icon-btn" type="button" data-remove="${c.id}" data-label="${esc(c.name)} (#${c.num})" aria-label="${tr('remove')} ${esc(c.name)}">×</button>
       </div>`).join('');
 
   // Historique
-  const why = (h) => h.cancelled_by === 'client' ? 'Parti' : h.cancelled_by === 'staff' ? 'Retiré' : 'Expiré';
+  const why = (h) => h.cancelled_by === 'client' ? tr('left') : h.cancelled_by === 'staff' ? tr('removed') : tr('expiredTicket');
   $('history').innerHTML = d.history.length === 0
-    ? '<div class="h-row" style="color:var(--mute);">Aucun client terminé aujourd’hui</div>'
+    ? `<div class="h-row" style="color:var(--mute);">${tr('noHistory')}</div>`
     : d.history.map((h) => `
       <div class="h-row">
         <span class="h-num">#${h.num}</span>
         <span class="h-name">${esc(h.name)}</span>
         <span class="h-what">${h.status === 'done' ? `${esc(svcName(h.service_code))} · ${money(h.price)}` : why(h)}</span>
-        ${h.status === 'done' ? '<span class="h-ok" title="Terminé">✓</span>' : '<span class="h-ko" title="Annulé">✕</span>'}
+        ${h.status === 'done' ? `<span class="h-ok" title="${tr('completed')}">✓</span>` : `<span class="h-ko" title="${tr('cancelled')}">✕</span>`}
       </div>`).join('');
 }
 
@@ -385,7 +596,7 @@ function bayCard(s, b) {
   return `
     <div class="bay busy glass ${over ? 'over' : ''}">
       <div class="bay-top">
-        <span class="label">Baie ${b}</span>
+        <span class="label">${tr('bay')} ${b}</span>
         <span class="tag ${s.service_code}" style="margin-left:auto;">${esc(svcName(s.service_code))}</span>
       </div>
       <div class="bay-top">
@@ -398,25 +609,25 @@ function bayCard(s, b) {
       </div>
       <div>
         <div class="bay-bar"><div style="width:${pct}%"></div></div>
-        <div class="label" style="margin-top:6px;">${elapsed} / ${s.minutes} min${over ? ' · dépassé' : ''}</div>
+        <div class="label" style="margin-top:6px;">${elapsed} / ${s.minutes} min${over ? ' · ' + tr('overdue') : ''}</div>
       </div>
       <div class="bay-actions">
-        <button class="btn btn-primary" style="flex:1;" type="button" data-finish="${s.id}" ${busy ? 'disabled' : ''}>✓ Terminé</button>
-        <button class="icon-btn" type="button" data-remove="${s.id}" data-label="${esc(s.name)} (#${s.num})" aria-label="Annuler ${esc(s.name)}">×</button>
+        <button class="btn btn-primary" style="flex:1;" type="button" data-finish="${s.id}" ${busy ? 'disabled' : ''}>✓ ${tr('completed')}</button>
+        <button class="icon-btn" type="button" data-remove="${s.id}" data-label="${esc(s.name)} (#${s.num})" aria-label="${tr('cancel')} ${esc(s.name)}">×</button>
       </div>
     </div>`;
 }
 
 // ---------- Actions ----------
 async function action(fn, args) {
-  if (busy) return;
+  if (busy || !data) return;
   busy = true; render();
   try {
     const { error } = await sb.rpc(fn, args);
     if (error) throw error;
   } catch (e) {
     console.error(e);
-    alert('L’action a échoué. Vérifiez votre connexion et réessayez.');
+    alert((e?.message || '').includes('BAIE_OCCUPEE') ? tr('occupiedBay') : tr('actionError'));
   } finally {
     busy = false;
     await loadData();
@@ -432,11 +643,20 @@ document.addEventListener('click', (ev) => {
   const fin = ev.target.closest('[data-finish]');
   if (fin) return action('finish_client', { p_id: Number(fin.dataset.finish) });
   const rm = ev.target.closest('[data-remove]');
-  if (rm && confirm(`Retirer ${rm.dataset.label} ?`)) action('remove_client', { p_id: Number(rm.dataset.remove) });
+  if (rm && confirm(tr('removeConfirm', { name: rm.dataset.label }))) action('remove_client', { p_id: Number(rm.dataset.remove) });
 });
 
-$('btn-reset').addEventListener('click', () => { $('reset-dialog').hidden = false; });
-$('btn-reset-no').addEventListener('click', () => { $('reset-dialog').hidden = true; });
+$('btn-reset').addEventListener('click', () => { $('reset-dialog').hidden = false; $('btn-reset-no').focus(); });
+const closeReset = () => { $('reset-dialog').hidden = true; $('btn-reset').focus(); };
+$('btn-reset-no').addEventListener('click', closeReset);
+document.addEventListener('keydown', (e) => {
+  if ($('reset-dialog').hidden) return;
+  if (e.key === 'Escape') closeReset();
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    (document.activeElement === $('btn-reset-no') ? $('btn-reset-yes') : $('btn-reset-no')).focus();
+  }
+});
 $('btn-reset-yes').addEventListener('click', async () => {
   $('reset-dialog').hidden = true;
   seenDepartures = null;
@@ -458,8 +678,12 @@ $('notif-close').addEventListener('click', () => { $('notif').hidden = true; set
 
 // ---------- Démarrage ----------
 (async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) enterDashboard(); else showLogin();
+  applyAdminLang();
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && needsPasswordSetup) showPasswordSetup();
+    else if (session) await enterDashboard(); else showLogin();
+  } catch { showLogin(tr('connectionError')); }
 })();
 setInterval(() => { if (data && !$('dash').hidden && !busy) render(); }, 30000);  // minuteurs des baies
 </script>

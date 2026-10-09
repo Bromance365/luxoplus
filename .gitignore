@@ -1,0 +1,8 @@
+node_modules/
+queue/dist/
+queue/dev/shots/
+queue/dev/test-results/
+.env
+.env.*
+!.env.example
+.DS_Store

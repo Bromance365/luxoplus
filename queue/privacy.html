@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#020610">
+<title>LUX·O·PLUS — Confidentialité</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  main { max-width: 680px; margin: auto; padding: 28px 20px 60px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 28px; }
+  h1 { font-size: clamp(32px, 9vw, 48px); margin-bottom: 16px; }
+  h2 { font-size: 20px; margin: 26px 0 10px; }
+  p { color: var(--chrome); line-height: 1.7; margin-bottom: 12px; }
+  .policy { padding: 26px; } .language { display: flex; gap: 8px; }
+  .language button { padding: 8px 10px; background: transparent; border: 1px solid var(--hairline-strong); border-radius: 20px; cursor: pointer; }
+  .language button[aria-pressed="true"] { background: var(--blue); }
+  a { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main>
+<header><a href="./" id="back">← Retour à la file</a><div class="language" aria-label="Language"><button data-lang="fr" type="button">FR</button><button data-lang="en" type="button">EN</button></div></header>
+<article class="glass policy">
+<h1 class="display" data-text="title">Confidentialité</h1>
+<p class="msg msg-warn" id="demo-note" hidden></p>
+<p data-text="intro"></p>
+<h2 data-text="collectionTitle"></h2><p data-text="collection"></p>
+<h2 data-text="useTitle"></h2><p data-text="use"></p>
+<h2 data-text="screenTitle"></h2><p data-text="screen"></p>
+<h2 data-text="storageTitle"></h2><p data-text="storage"></p>
+<h2 data-text="retentionTitle"></h2><p id="retention"></p>
+<h2 data-text="deviceTitle"></h2><p data-text="device"></p>
+<h2 data-text="contactTitle"></h2><p data-text="contact"></p>
+<p><a id="contact-email"></a><br><a id="contact-phone"></a></p>
+<p data-text="updated" style="font-size:12px"></p>
+</article>
+</main>
+<script src="config.js"></script>
+<script>
+const texts = {
+  fr: {
+    title: 'Confidentialité', back: '← Retour à la file',
+    intro: 'Cette page explique l’utilisation des renseignements dans la file d’attente de Lave Auto Luxoplus.',
+    demo: 'Mode démonstration : les billets et coordonnées sont enregistrés uniquement dans ce navigateur. Ils ne sont pas transmis au personnel ni synchronisés avec d’autres appareils.',
+    collectionTitle: 'Ce que vous nous fournissez',
+    collection: 'Votre nom, téléphone, taille du véhicule, marque et modèle, couleur facultative et choix de forfait servent à gérer votre billet. Le système enregistre aussi l’heure d’inscription et les changements de statut. Une empreinte de l’adresse IP limite les abus et les tentatives de récupération de billets.',
+    useTitle: 'À quoi servent ces renseignements',
+    use: 'Le personnel autorisé peut consulter vos coordonnées pour gérer votre visite et vous joindre au besoin. Aucun texto automatique ni publicité par téléphone n’est envoyé par cette application. Les alertes s’affichent lorsque votre page de suivi reste ouverte; les notifications du navigateur sont facultatives.',
+    screenTitle: 'Écran public et lien de suivi',
+    screen: 'L’écran public affiche le numéro de billet, le forfait, la baie et les estimations. Il n’affiche ni nom ni téléphone ni véhicule. Votre lien de suivi donne accès à votre billet : gardez-le privé et ne le partagez qu’avec une personne de confiance. Pour retrouver un billet sans lien, il faut le téléphone et le numéro de billet.',
+    storageTitle: 'Hébergement et fournisseurs',
+    storage: 'Le site est hébergé par Netlify. La version opérationnelle utilise Supabase pour les billets et l’accès du personnel. Des polices peuvent être chargées depuis Google Fonts. Ces fournisseurs peuvent traiter des données techniques, notamment une adresse IP, selon leurs conditions. L’application n’intègre aucun outil publicitaire ni analytique.',
+    retentionTitle: 'Conservation',
+    retention: 'Dans la version opérationnelle, les coordonnées et renseignements du véhicule sont anonymisés après 30 jours. Les données de service (forfait, montant, date et statut) restent pour les statistiques. Les traces de récupération de billets sont supprimées après une journée. Pour demander une suppression plus tôt, contactez le garage.',
+    demoRetention: 'La démonstration conserve les données sur votre appareil jusqu’au changement de journée à Montréal, à la remise à zéro de la démo ou à l’effacement des données du site dans votre navigateur.',
+    deviceTitle: 'Sur votre appareil',
+    device: 'Le navigateur mémorise votre langue et le lien de votre billet pour retrouver votre place. Sur un appareil partagé, effacez les données du site après votre visite. Si vous désactivez le stockage du navigateur, gardez votre lien de suivi vous-même.',
+    contactTitle: 'Demandes et corrections',
+    contact: 'Pour consulter, corriger ou demander la suppression de vos renseignements, ou pour une question de confidentialité, contactez Lave Auto Luxoplus aux coordonnées suivantes.',
+    updated: 'Mise à jour : 9 octobre 2026.',
+  },
+  en: {
+    title: 'Privacy', back: '← Back to the queue',
+    intro: 'This page explains how information is used in the Lave Auto Luxoplus queue.',
+    demo: 'Demo mode: tickets and contact details are stored only in this browser. They are not sent to staff or synchronized with other devices.',
+    collectionTitle: 'Information you provide',
+    collection: 'Your name, phone, vehicle size, make and model, optional colour and package choice are used to manage your ticket. The system also records registration time and status changes. An IP address fingerprint limits abuse and ticket recovery attempts.',
+    useTitle: 'How information is used',
+    use: 'Authorized staff can view your details to manage your visit and contact you if needed. This application sends no automatic text messages or phone marketing. Alerts appear while your tracking page stays open; browser notifications are optional.',
+    screenTitle: 'Public display and tracking link',
+    screen: 'The public display shows ticket number, package, bay and estimates. It shows no names, phones or vehicles. Your tracking link gives access to your ticket: keep it private and share it only with someone you trust. Recovering a ticket without the link requires both phone and ticket number.',
+    storageTitle: 'Hosting and providers',
+    storage: 'Netlify hosts the site. The operational version uses Supabase for tickets and staff access. Fonts may load from Google Fonts. These providers may process technical data, including IP addresses, under their terms. This application includes no advertising or analytics tool.',
+    retentionTitle: 'Retention',
+    retention: 'In the operational version, contact and vehicle details are anonymized after 30 days. Service data (package, amount, date and status) remains for statistics. Recovery attempt records are deleted after one day. Contact the shop to request earlier deletion.',
+    demoRetention: 'Demo data stays on your device until the Montreal service day changes, you reset the demo or clear the site’s browser data.',
+    deviceTitle: 'On your device',
+    device: 'The browser remembers your language and ticket link to restore your place. On a shared device, clear site data after your visit. If you disable browser storage, save your tracking link yourself.',
+    contactTitle: 'Requests and corrections',
+    contact: 'To access, correct or request deletion of your information, or for a privacy question, contact Lave Auto Luxoplus using the details below.',
+    updated: 'Updated: October 9, 2026.',
+  },
+};
+let lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'fr';
+function render() {
+  const copy = texts[lang]; document.documentElement.lang = lang;
+  document.title = 'LUX·O·PLUS — ' + copy.title;
+  document.querySelectorAll('[data-text]').forEach((el) => { el.textContent = copy[el.dataset.text]; });
+  document.getElementById('back').textContent = copy.back;
+  document.getElementById('demo-note').hidden = !APP_CONFIG.demo;
+  document.getElementById('demo-note').textContent = copy.demo;
+  document.getElementById('retention').textContent = APP_CONFIG.demo ? copy.demoRetention : copy.retention;
+  document.querySelectorAll('[data-lang]').forEach((el) => el.setAttribute('aria-pressed', String(el.dataset.lang === lang)));
+  const email = document.getElementById('contact-email'), phone = document.getElementById('contact-phone');
+  email.textContent = APP_CONFIG.business.email; email.href = 'mailto:' + APP_CONFIG.business.email;
+  phone.textContent = APP_CONFIG.business.phone; phone.href = 'tel:' + APP_CONFIG.business.phone.replace(/\D/g, '');
+}
+document.querySelectorAll('[data-lang]').forEach((el) => el.addEventListener('click', () => { lang = el.dataset.lang; render(); }));
+render();
+</script>
+</body>
+</html>

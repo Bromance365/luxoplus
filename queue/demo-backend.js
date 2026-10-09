@@ -11,7 +11,7 @@
   const KEY = 'lux_demo_state_v3';   // v3 : couleur du véhicule
   const SESSION_KEY = 'lux_demo_session';
   const MIN = 60000;
-  const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+  const today = () => window.businessDate();
   const nowIso = (minAgo = 0) => new Date(Date.now() - minAgo * MIN).toISOString();
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
@@ -77,7 +77,7 @@
     if (!close) return true;
     return Date.now() + (wait + minutes) * MIN <= close.getTime() + (s.settings.close_grace_minutes ?? 30) * MIN;
   }
-  const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const hhmm = (d) => new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: window.businessTimeZone }).format(d);
 
   function estimateWait(s, beforeNum) {
     const free = s.queue.filter((q) => q.status === 'serving')
@@ -123,14 +123,13 @@
       };
     },
     get_board(s) {
-      const first = (n) => String(n || '').trim().split(/\s+/)[0].slice(0, 20);
       const svcMin = (code) => (svc(code) || {}).minutes || 30;
       return {
         server_time: nowIso(), bays: s.settings.bays, is_open: isOpen(s), accepting: s.settings.accepting,
         wait_minutes: estimateWait(s, null),
         waiting_count: s.queue.filter((q) => q.service_day === s.day && q.status === 'waiting').length,
         serving: s.queue.filter((q) => q.status === 'serving' && q.service_day === s.day).sort((a, b) => a.bay - b.bay)
-          .map((q) => ({ num: q.num, bay: q.bay, service_code: q.service_code, total_minutes: svcMin(q.service_code), first_name: first(q.name),
+          .map((q) => ({ num: q.num, bay: q.bay, service_code: q.service_code, total_minutes: svcMin(q.service_code), first_name: '',
             minutes_left: Math.max(0, Math.ceil(svcMin(q.service_code) - (Date.now() - Date.parse(q.called_at)) / MIN)) })),
         next: s.queue.filter((q) => q.service_day === s.day && q.status === 'waiting').sort((a, b) => a.num - b.num).slice(0, 8)
           .map((q) => ({ num: q.num, service_code: q.service_code, wait_minutes: estimateWait(s, q.num) })),
@@ -183,19 +182,21 @@
     find_ticket(s, { p_phone, p_num }) {
       let digits = String(p_phone || '').replace(/\D/g, '');
       if (digits.length === 11 && digits[0] === '1') digits = digits.slice(1);
-      if (digits.length !== 10) return null;
+      s.lookupAttempts = (s.lookupAttempts || []).filter((at) => at > Date.now() - 600000);
+      if (s.lookupAttempts.length >= 10) fail('TROP_DE_DEMANDES');
+      s.lookupAttempts.push(Date.now()); save(s, false);
+      if (digits.length !== 10 || !Number.isInteger(p_num) || p_num < 1) return null;
       const phone = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
       const hit = s.queue
-        .filter((q) => q.service_day === s.day && q.phone === phone && (p_num == null || q.num === p_num)
+        .filter((q) => q.service_day === s.day && q.phone === phone && q.num === p_num
           && ['waiting', 'serving', 'done'].includes(q.status))
         .sort((a, b) => (a.status === 'done') - (b.status === 'done') || b.num - a.num)[0];
       return hit ? hit.token : null;
     },
     leave_queue(s, { p_token }) {
-      const v = s.queue.find((q) => q.token === p_token && ['waiting', 'serving'].includes(q.status));
+      const v = s.queue.find((q) => q.token === p_token && q.status === 'waiting');
       if (!v) return false;
       Object.assign(v, { status: 'cancelled', cancelled_by: 'client', finished_at: nowIso() });
-      if (v.called_at) promoteNext(s);
       return true;
     },
     get_admin_dashboard(s) {
@@ -230,12 +231,14 @@
     set_accepting(s, { p_on }) { requireAdmin(); s.settings.accepting = !!p_on; },
     set_bays(s, { p_bays }) {
       requireAdmin();
-      if (p_bays < 1 || p_bays > 20) fail('BAIES_INVALIDE');
+      if (!Number.isInteger(p_bays) || p_bays < 1 || p_bays > 20) fail('BAIES_INVALIDE');
+      if (s.queue.some((q) => q.status === 'serving' && q.bay > p_bays)) fail('BAIE_OCCUPEE');
       s.settings.bays = p_bays;
     },
     reset_today(s) {
       requireAdmin();
-      s.queue = s.queue.filter((q) => q.service_day !== s.day && !['waiting', 'serving'].includes(q.status));
+      s.queue.filter((q) => q.service_day === s.day && ['waiting', 'serving'].includes(q.status))
+        .forEach((q) => Object.assign(q, { status: 'cancelled', cancelled_by: 'staff', finished_at: nowIso() }));
     },
   };
   const READ_ONLY = ['get_queue_status', 'get_board', 'get_ticket', 'get_admin_dashboard', 'find_ticket'];
