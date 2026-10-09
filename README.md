@@ -8,13 +8,13 @@ Reviewed release is saved on GitHub branch `codex/luxoplus-production-review`.
 
 ## Current status
 
-**Production deployed October 9, 2026; registrations paused for owner activation.**
+**Production deployed and activated October 9, 2026.**
 Live site: https://luxoplus-file-attente-v2.netlify.app.
 Dedicated Canadian Supabase project: `umicfoxlyfubcberbmrv`.
-Staff invitation sent to `vy@abundances.ai`; accept it and set a password, then use
-the staff dashboard's “Inscriptions suspendues · Rouvrir” button when ready.
+Staff account `vy@abundances.ai` is confirmed and the signed-in dashboard was verified.
+Registrations are enabled and follow the configured Monday–Saturday 08:00–18:00 hours.
 Database/API checks, mobile/TV transitions and scheduled retention were verified live.
-Owner password setup and physical TV sound remain to be checked by the owner.
+Physical TV sound remains to be checked at the garage.
 
 - [QA report](queue/QA_REPORT.md): verified results and remaining limits.
 - [Release approval](queue/RELEASE_APPROVAL.md): exact launch actions and owner decisions.

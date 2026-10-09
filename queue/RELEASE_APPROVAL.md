@@ -1,9 +1,12 @@
 # Luxoplus launch record — October 9, 2026
 
-**Production deployed; registrations paused for owner activation.**
+**Production deployed and activated.**
 
 The owner approved the organization and staff recipient, then explicitly approved
 US$10/month additional Micro compute plus usage overages before project creation.
+The owner then authorized completing activation through the available access. The staff
+account is confirmed, its signed-in dashboard was verified, and registrations were
+enabled from that account on October 9. The public registration form was checked live.
 
 ## Deployed setup
 
@@ -29,17 +32,19 @@ US$10/month additional Micro compute plus usage overages before project creation
 - Dedicated database schema, indexes and protected staff access are installed.
   Other businesses' databases are untouched. Launch test data was removed.
 
-## Owner activation
+## Activation completed
 
-1. Accept the invitation sent to **vy@abundances.ai** and choose a password.
-2. Sign in to the staff page. Confirm the inherited operating values below and privacy
-   notice before serving customers.
-3. On the physical TV, open `/tv.html`, enable sound, and check volume and FR/EN voices.
-4. When the garage is ready, click **Inscriptions suspendues · Rouvrir** in the staff
-   dashboard. Registrations currently remain paused; there are no active tickets.
+The account has a confirmed email, a password and a successful sign-in. The authenticated
+staff dashboard showed an empty queue and successfully enabled registrations using its
+normal staff RPC. No password was entered, read or changed by this agent.
+The server also confirms an active queue Realtime subscription for the approved staff account.
 
-Inbox delivery, the owner's chosen-password login, authenticated browser Realtime,
-physical TV audio and real phones/Safari have not been observed. Hosted public API,
+Registrations now follow the configured business hours and service-duration limits.
+The owner can pause them with **Inscriptions ouvertes · Suspendre** in the dashboard.
+On the physical TV, open `/tv.html`, enable sound, and check volume and FR/EN voices.
+
+Password setup was not observed directly; the confirmed account and signed-in dashboard
+were verified. Physical TV audio and real phones/Safari have not been observed. Hosted public API,
 mobile tracking, separate TV polling, staff database roles, call/completion, permissions,
 headers and scheduled cleanup pass. See `QA_REPORT.md` for evidence and advisor notes.
 
@@ -53,7 +58,7 @@ headers and scheduled cleanup pass. See `QA_REPORT.md` for evidence and advisor 
 
 Monday–Saturday, 08:00–18:00 Montreal time. Two bays. Completion grace: 30 minutes
 after closing. These values come from the recovered project and still require the
-operator's business validation before use.
+operator's independent business validation; activation uses these inherited values.
 
 No automatic SMS is sent. Browser alerts require the tracking page to remain open.
 SMS would require a separate provider, consent workflow and cost approval.

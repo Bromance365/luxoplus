@@ -1,6 +1,6 @@
 # Luxoplus QA — October 9, 2026
 
-**Verdict: production deployed and verified; registrations paused for owner activation.**
+**Verdict: production deployed, verified and activated with owner authorization.**
 
 Reviewed source: Claude Code session “Luxoplus queue website”, GitHub branch
 `claude/kind-lamport-4aw5m0` at `15d84ef`. Reviewed changes are saved on GitHub branch
@@ -54,7 +54,8 @@ The original Claude QA report is preserved as `dev/QA_REPORT_CLAUDE_2026-10-06.m
   on all five tables; protected helpers are not anonymously executable.
 - Staff RPCs were exercised using the approved Auth UUID and authenticated database
   role: dashboard access, call and completion pass. This does not replace a real
-  browser login with the owner's chosen password, which remains pending.
+  browser login with the owner's chosen password; a signed-in staff session was subsequently
+  observed and verified during activation.
 - Separate Chromium contexts on the live site: 390px customer phone with Tokyo device
   timezone, 1280×720 TV and signed-out staff page. Tracking token removal, QR, called
   ticket and completion transitions pass. No uncaught browser errors were observed.
@@ -69,7 +70,11 @@ The original Claude QA report is preserved as `dev/QA_REPORT_CLAUDE_2026-10-06.m
   primary key; both are fixed in hosted SQL and the checked-in bootstrap/upgrade files.
   The 82 SQL checks pass again after these changes.
 - All launch test tickets were removed; the queue, bays and revenue start empty.
-  Registrations remain paused for the owner to activate after password setup.
+  Registrations were subsequently enabled from the confirmed owner's signed-in dashboard.
+  The authenticated staff RPC succeeded and the public registration page reflects opening
+  hours and package duration limits.
+- The hosted Realtime subscription table confirms one queue subscription for the
+  approved staff Auth UUID during the signed-in session. Polling fallback remains enabled.
 
 Security advisors flag the deliberately public SECURITY DEFINER RPCs, authenticated
 staff RPCs and four RLS tables with no direct-read policies. These are intentional:
@@ -84,13 +89,14 @@ and [production configuration](https://supabase.com/docs/guides/deployment/going
 
 ## Limits and remaining owner checks
 
-- **Owner login remains pending.** The invitation was accepted by Supabase; inbox
-  delivery and the owner's password setup have not been observed. Recovery email
-  delivery and authenticated browser Realtime remain to be checked after setup.
+- **Staff access verified.** Supabase confirms email, password and successful sign-in;
+  the signed-in staff dashboard was observed and used to enable registrations. Password
+  entry and recovery email delivery were not observed by this agent.
 - **TV audio is untested on hardware.** Browser tests exercise the chime and both
   voice calls; they do not prove speaker volume, available FR/EN voices or TV sleep behavior.
-- **Owner validation remains required.** Approve inherited rates/hours/bays and the
-  privacy notice, hosting arrangement and retention policy. No Loi 25 certification is claimed.
+- **Owner authorized activation using inherited settings.** Rates/hours/bays remain those
+  of the recovered project and are not independently verified business data.
+  No Loi 25 certification is claimed.
 - Browser alerts are foreground/browser notifications, not background push or SMS.
 - Ticket recovery uses phone + ticket number and rate limits, not identity verification
   by OTP. Tracking links are bearer access and must remain private.

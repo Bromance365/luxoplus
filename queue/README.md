@@ -10,11 +10,11 @@ Version publiée et vérifiée le 9 octobre 2026 sur
 `https://luxoplus-file-attente-v2.netlify.app`, avec Supabase dédié au Canada
 (`umicfoxlyfubcberbmrv`). Les inscriptions publiques Auth sont désactivées
 pour les clients; un compte personnel autorisé a reçu son invitation à `vy@abundances.ai`.
-Les inscriptions à la file sont suspendues pour l’activation par le propriétaire.
-Accepter l’invitation, choisir un mot de passe, puis cliquer sur
-« Inscriptions suspendues · Rouvrir » dans `/admin.html` lorsque le garage est prêt.
+Le compte personnel est confirmé et son tableau de bord connecté a été vérifié.
+Les inscriptions à la file sont activées selon les heures configurées : lun–sam, 08 h–18 h.
+L’activation a été effectuée depuis le compte connecté, avec l’autorisation du propriétaire.
 Le parcours client/TV et la purge planifiée ont été vérifiés sur la production.
-La connexion avec le mot de passe choisi et le son du téléviseur physique restent à vérifier.
+Le son du téléviseur physique reste à vérifier au garage.
 Le site original `luxoplus-file-attente.netlify.app` dépend d’un autre compte Netlify
 selon le contexte Claude Code du 6 octobre; cet accès n’a pas été revérifié ici.
 
